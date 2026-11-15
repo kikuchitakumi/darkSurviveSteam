@@ -1,0 +1,18 @@
+# 依存パッケージ・ビルド成果物
+node_modules/
+dist/
+release/
+*.tsbuildinfo
+
+# ログ・一時ファイル
+*.log
+.vite/
+screenshots/
+tools/_*.ts
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/

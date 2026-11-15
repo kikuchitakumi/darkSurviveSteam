@@ -1,0 +1,36 @@
+{
+  "name": "dark-survive",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DarkSurvive - ホラー風デッキ構築型ローグライク（塔を100Fまで登る）",
+  "type": "module",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "gen:images": "tsx tools/generate-placeholders.ts",
+    "gen:audio": "tsx tools/generate-audio.ts",
+    "gen:all": "npm run gen:images && npm run gen:audio && npm run assets:list",
+    "assets:list": "tsx tools/asset-list.ts",
+    "sim": "tsx tools/simulate.ts",
+    "i18n:check": "tsx tools/i18n-check.ts",
+    "screenshot": "tsx tools/screenshot.ts",
+    "electron": "npm run build && electron ."
+  },
+  "devDependencies": {
+    "@breezystack/lamejs": "^1.2.7",
+    "electron": "^32.3.3",
+    "playwright-core": "^1.65.1",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.8",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@fontsource/cinzel": "^5.3.0",
+    "@fontsource/shippori-mincho-b1": "^5.3.0"
+  }
+}

@@ -1,0 +1,195 @@
+# 素材一覧（自動生成）
+
+> このファイルは `npm run assets:list` で自動生成されます。手で編集しないでください。
+> 素材は全て `public/assets/` 以下にあります。**同じファイル名で上書きすれば、コードを変えずに差し替わります。**
+> 拡張子を変える場合（例: .wav → .mp3）は `src/data/` の該当パスも書き換えてください。
+
+| 種類 | ファイル | 用途 | サイズ |
+|---|---|---|---|
+| 背景 | `images/bg/bg_tower_zone1.webp` | 探索画面 ZONE1「塔の下層・地下牢」 1920x1080 | 32KB |
+| 背景 | `images/bg/bg_battle_zone1.webp` | 戦闘画面 ZONE1「塔の下層・地下牢」 1920x1080 | 30KB |
+| 背景 | `images/bg/bg_tower_zone2.webp` | 探索画面 ZONE2「研究棟」 1920x1080 | 32KB |
+| 背景 | `images/bg/bg_battle_zone2.webp` | 戦闘画面 ZONE2「研究棟」 1920x1080 | 29KB |
+| 背景 | `images/bg/bg_tower_zone3.webp` | 探索画面 ZONE3「礼拝堂」 1920x1080 | 31KB |
+| 背景 | `images/bg/bg_battle_zone3.webp` | 戦闘画面 ZONE3「礼拝堂」 1920x1080 | 29KB |
+| 背景 | `images/bg/bg_tower_zone4.webp` | 探索画面 ZONE4「機関区画」 1920x1080 | 33KB |
+| 背景 | `images/bg/bg_battle_zone4.webp` | 戦闘画面 ZONE4「機関区画」 1920x1080 | 32KB |
+| 背景 | `images/bg/bg_tower_zone5.webp` | 探索画面 ZONE5「頂上・深淵」 1920x1080 | 31KB |
+| 背景 | `images/bg/bg_battle_zone5.webp` | 戦闘画面 ZONE5「頂上・深淵」 1920x1080 | 29KB |
+| 背景 | `images/bg/bg_tower_1f.webp` | 1F 塔の入口 1920x1080 | 30KB |
+| 背景 | `images/bg/bg_title_keyvisual.webp` | タイトル画面キービジュアル 1920x1080 | 32KB |
+| 背景 | `images/bg/bg_status_roll.webp` | ステータス抽選 1920x1080 | 27KB |
+| 背景 | `images/bg/bg_treasure_room.webp` | 宝物庫 1920x1080 | 37KB |
+| 背景 | `images/bg/bg_shop.webp` | ショップ 1920x1080 | 30KB |
+| 背景 | `images/bg/bg_dark_shop.webp` | 闇商人 1920x1080 | 26KB |
+| 背景 | `images/bg/bg_gameover.webp` | ゲームオーバー 1920x1080 | 26KB |
+| 背景 | `images/bg/bg_clear.webp` | エンディング 1920x1080 | 61KB |
+| 背景 | `images/bg/bg_event.webp` | イベント 1920x1080 | 27KB |
+| オブジェクト(透過) | `images/objects/door_battle.png` | 分かれ道の扉：戦闘 | 174KB |
+| オブジェクト(透過) | `images/objects/door_elite.png` | 分かれ道の扉：戦闘（危険） | 175KB |
+| オブジェクト(透過) | `images/objects/door_event.png` | 分かれ道の扉：イベント | 173KB |
+| オブジェクト(透過) | `images/objects/door_shop.png` | 分かれ道の扉：ショップ | 175KB |
+| オブジェクト(透過) | `images/objects/door_boss.png` | 分かれ道の扉：ボス | 161KB |
+| オブジェクト(透過) | `images/objects/door_hidden.png` | 分かれ道の扉：隠し通路 | 176KB |
+| オブジェクト(透過) | `images/objects/door_1f.png` | 1Fの大扉 | 223KB |
+| オブジェクト(透過) | `images/objects/chest_red.png` | 赤い宝箱 | 16KB |
+| オブジェクト(透過) | `images/objects/chest_blue.png` | 青い宝箱 | 17KB |
+| オブジェクト(透過) | `images/objects/chest_yellow.png` | 黄色い宝箱 | 18KB |
+| オブジェクト(透過) | `images/objects/chest_green.png` | 緑の宝箱 | 18KB |
+| オブジェクト(透過) | `images/objects/obj_merchant.png` | 商人 | 163KB |
+| オブジェクト(透過) | `images/objects/obj_dark_merchant.png` | 闇商人 | 169KB |
+| オブジェクト(透過) | `images/objects/obj_altar.png` | イベント「囁く祭壇」 | 240KB |
+| オブジェクト(透過) | `images/objects/obj_bloody_box.png` | イベント「血塗れの木箱」 | 239KB |
+| オブジェクト(透過) | `images/objects/obj_dying_soldier.png` | イベント「瀕死の兵士」 | 246KB |
+| 敵(透過) | `images/enemies/enemy_rot_rat.png` | 敵：腐肉ネズミ（腐った肉を好む巨大なネズミ。群れで現れる。） | 75KB |
+| 敵(透過) | `images/enemies/enemy_crawler.png` | 敵：這いずる者（下半身を失ってなお、獲物を求めて這い回る。） | 80KB |
+| 敵(透過) | `images/enemies/enemy_rusted_sentry.png` | 敵：錆びた番兵（塔を守る為に作られた機械仕掛けの兵士。） | 72KB |
+| 敵(透過) | `images/enemies/elite_iron_jailer.png` | 強敵：鉄仮面の看守（囚人を拷問し続けた看守の成れの果て。） | 81KB |
+| 敵(透過) | `images/enemies/enemy_specimen7.png` | 敵：実験体No.7（投薬実験で肥大化した被験者。） | 67KB |
+| 敵(透過) | `images/enemies/enemy_vat_leech.png` | 敵：培養液の蛭（培養槽から逃げ出した巨大な蛭。血を吸って再生する。） | 70KB |
+| 敵(透過) | `images/enemies/enemy_labcoat_revenant.png` | 敵：白衣の亡者（実験の記録を探し続ける研究者の亡霊。） | 62KB |
+| 敵(透過) | `images/enemies/elite_failed_chimera.png` | 強敵：失敗作キメラ（複数の生物を継ぎ接ぎした失敗作。制御不能。） | 74KB |
+| 敵(透過) | `images/enemies/enemy_praying_corpse.png` | 敵：祈る屍（祈りの姿勢のまま動き出した死体。） | 62KB |
+| 敵(透過) | `images/enemies/enemy_candle_wraith.png` | 敵：蝋燭の亡霊（消えかけた蝋燭に宿る怨念。） | 73KB |
+| 敵(透過) | `images/enemies/enemy_black_zealot.png` | 敵：黒衣の信徒（塔の頂に神がいると信じる狂信者。） | 75KB |
+| 敵(透過) | `images/enemies/elite_choir_heads.png` | 強敵：聖歌隊の首（切り落とされた首が今も聖歌を歌い続けている。） | 76KB |
+| 敵(透過) | `images/enemies/enemy_cog_hound.png` | 敵：歯車の犬（歯車と肉で組み上げられた番犬。） | 70KB |
+| 敵(透過) | `images/enemies/enemy_steam_husk.png` | 敵：蒸気の亡骸（全身から高温の蒸気を噴き出す死体。） | 70KB |
+| 敵(透過) | `images/enemies/enemy_hanged_marionette.png` | 敵：吊るされた人形（天井から吊られた等身大の操り人形。） | 84KB |
+| 敵(透過) | `images/enemies/elite_incinerator_keeper.png` | 強敵：焼却炉の主（全てを燃やし尽くす焼却炉の管理者。） | 93KB |
+| 敵(透過) | `images/enemies/enemy_shade_eater.png` | 敵：影喰い（光を喰らい、影の中から襲いかかる。） | 66KB |
+| 敵(透過) | `images/enemies/enemy_eye_swarm.png` | 敵：眼の群れ（無数の眼球が一つの意志で蠢いている。） | 66KB |
+| 敵(透過) | `images/enemies/enemy_empty_armor.png` | 敵：虚ろな甲冑（中身のない甲冑。かつての勇者のものだという。） | 71KB |
+| 敵(透過) | `images/enemies/elite_tower_spawn.png` | 強敵：塔の落とし子（塔そのものが産み落とした異形。） | 84KB |
+| 敵(透過) | `images/enemies/boss_flesh_warden.png` | ボス 10F：肉塊の番人（下層への侵入者を阻む、巨大な肉の塊。） | 154KB |
+| 敵(透過) | `images/enemies/boss_stitched_nurse.png` | ボス 20F：縫われた看護婦（患者を「治療」し続ける看護婦。その手術は終わらない。） | 144KB |
+| 敵(透過) | `images/enemies/boss_writhing_researcher.png` | ボス 30F：蠢く研究者（自らを実験台にした主任研究者。体内で何かが蠢く。） | 149KB |
+| 敵(透過) | `images/enemies/boss_twin_hound.png` | ボス 40F：双頭の猟犬（二つの頭を持つ巨大な猟犬。獲物を逃さない。） | 133KB |
+| 敵(透過) | `images/enemies/boss_belfry_wraith.png` | ボス 50F：鐘楼の亡霊（鐘を鳴らすたびに、誰かが死ぬという。） | 150KB |
+| 敵(透過) | `images/enemies/boss_parasite_mother.png` | ボス 60F：寄生体マザー（塔中に寄生体をばら撒く母体。） | 149KB |
+| 敵(透過) | `images/enemies/boss_iron_executioner.png` | ボス 70F：鋼鉄の処刑人（巨大な鉈を引きずる処刑人。決して止まらない。） | 143KB |
+| 敵(透過) | `images/enemies/boss_abyss_priest.png` | ボス 80F：深淵の司祭（深淵の神に仕える司祭。信徒を盾にする。） | 137KB |
+| 敵(透過) | `images/enemies/boss_tower_heart.png` | ボス 90F：塔の心臓（塔全体に血を送り続ける巨大な心臓。） | 153KB |
+| 敵(透過) | `images/enemies/boss_dawn_devourer.png` | ボス 100F：夜明けを喰らうもの（塔の頂に棲む、全ての元凶。この悪夢の終わり。） | 149KB |
+| カード絵 | `images/cards/card_strike.png` | 斬りつけ：敵に {damage} ダメージを与える。 | 110KB |
+| カード絵 | `images/cards/card_defend.png` | 身構える：{block} ブロックを得る。 | 120KB |
+| カード絵 | `images/cards/card_seal.png` | 封印の札：敵の行動を1ターン封じる。 | 115KB |
+| カード絵 | `images/cards/card_rage.png` | 奮起：このターン、自分の攻撃力を +5 する。 | 128KB |
+| カード絵 | `images/cards/card_scavenge.png` | 取捨選択：手札のカードを1枚選んで廃棄する。 カードを2枚引く。 | 121KB |
+| カード絵 | `images/cards/card_executioner.png` | 処刑斬り：敵に {damage} ダメージを与える。 | 110KB |
+| カード絵 | `images/cards/card_flurry.png` | 狂乱の連撃：敵に {damage} ダメージを {hits} 回与える。 | 116KB |
+| カード絵 | `images/cards/card_shotgun.png` | 散弾：敵全体に {damage} ダメージを与える。 | 111KB |
+| カード絵 | `images/cards/card_hellfire.png` | 獄炎：敵全体に {damage} ダメージ（魔力依存）。 廃棄。 | 126KB |
+| カード絵 | `images/cards/card_iron_wall.png` | 鉄壁：{block} ブロックを得る。 | 111KB |
+| カード絵 | `images/cards/card_toxic_mist.png` | 毒霧：敵全体に毒 4 を与える。 | 118KB |
+| カード絵 | `images/cards/card_terror.png` | 恐怖の囁き：敵に衰弱 2 と脆弱 2 を与える。 | 127KB |
+| カード絵 | `images/cards/card_adrenaline.png` | アドレナリン：AP を 2 得る。カードを1枚引く。 廃棄。 | 121KB |
+| カード絵 | `images/cards/card_blood_pact.png` | 血の契約：筋力 3 を得る（戦闘中ずっと有効）。 廃棄。 | 121KB |
+| カード絵 | `images/cards/card_first_aid.png` | 応急処置：HP を {heal} 回復する。 廃棄。 | 120KB |
+| UI | `images/ui/ui_card_frame_attack.png` | カード枠（attack） | 45KB |
+| UI | `images/ui/ui_card_frame_defense.png` | カード枠（defense） | 54KB |
+| UI | `images/ui/ui_card_frame_buff.png` | カード枠（buff） | 51KB |
+| UI | `images/ui/ui_card_frame_debuff.png` | カード枠（debuff） | 55KB |
+| UI | `images/ui/ui_card_frame_special.png` | カード枠（special） | 56KB |
+| UI | `images/ui/ui_card_back.png` | カード裏面 | 63KB |
+| UI | `images/ui/ui_button.png` | ボタン枠（透過・全ボタン共通） | 7KB |
+| UI | `images/ui/ui_panel.png` | パネル枠 | 23KB |
+| UI | `images/ui/ui_logo.png` | タイトルロゴ | 175KB |
+| UI | `images/ui/intent_attack.png` | 敵の意図アイコン：attack | 12KB |
+| UI | `images/ui/intent_debuff.png` | 敵の意図アイコン：debuff | 14KB |
+| UI | `images/ui/intent_buff.png` | 敵の意図アイコン：buff | 12KB |
+| UI | `images/ui/intent_block.png` | 敵の意図アイコン：block | 12KB |
+| UI | `images/ui/intent_special.png` | 敵の意図アイコン：special | 10KB |
+| UI | `images/ui/intent_stun.png` | 敵の意図アイコン：stun | 11KB |
+| UI | `images/ui/icon_gold.png` | アイコン：gold | 13KB |
+| UI | `images/ui/icon_hp.png` | アイコン：hp | 13KB |
+| UI | `images/ui/icon_ap.png` | アイコン：ap | 13KB |
+| UI | `images/ui/icon_block.png` | アイコン：block | 4KB |
+| UI | `images/ui/icon_deck.png` | アイコン：deck | 11KB |
+| UI | `images/ui/icon_discard.png` | アイコン：discard | 14KB |
+| UI | `images/ui/icon_exhaust.png` | アイコン：exhaust | 13KB |
+| UI | `images/ui/icon_floor.png` | アイコン：floor | 13KB |
+| UI | `images/ui/icon_menu.png` | アイコン：menu | 13KB |
+| UI | `images/ui/icon_status.png` | アイコン：status | 11KB |
+| 状態異常アイコン | `images/ui/status_strength.png` | 筋力：攻撃ダメージが {n} 増加する。 | 7KB |
+| 状態異常アイコン | `images/ui/status_turnStrength.png` | 奮起：このターン、攻撃ダメージが {n} 増加する。 | 7KB |
+| 状態異常アイコン | `images/ui/status_dexterity.png` | 敏捷：獲得するブロックが {n} 増加する。 | 7KB |
+| 状態異常アイコン | `images/ui/status_weak.png` | 衰弱：与える攻撃ダメージが 25% 減少する。（残り {n} ターン） | 7KB |
+| 状態異常アイコン | `images/ui/status_vulnerable.png` | 脆弱：受ける攻撃ダメージが 50% 増加する。（残り {n} ターン） | 7KB |
+| 状態異常アイコン | `images/ui/status_frail.png` | 萎縮：獲得するブロックが 25% 減少する。（残り {n} ターン） | 7KB |
+| 状態異常アイコン | `images/ui/status_poison.png` | 毒：ターン開始時に {n} ダメージを受け、毒が1減る。 | 7KB |
+| 状態異常アイコン | `images/ui/status_stun.png` | 封印：次の行動ができない。 | 6KB |
+| 状態異常アイコン | `images/ui/status_stunResist.png` | 封印耐性：封印を受け付けない。（残り {n} ターン） | 7KB |
+| 状態異常アイコン | `images/ui/status_regen.png` | 再生：ターン終了時に HP を {n} 回復し、再生が1減る。 | 7KB |
+| 状態異常アイコン | `images/ui/status_thorns.png` | 棘：攻撃を受けると、攻撃者に {n} ダメージを返す。 | 7KB |
+| アイテム | `images/items/item_potion.png` | 回復薬：HP を {heal} 回復する。 | 30KB |
+| アイテム | `images/items/item_stimulant.png` | 気付け薬：AP を 1 得る。 | 31KB |
+| アイテム | `images/items/item_molotov.png` | 火炎瓶：敵全体に 10 ダメージを与える。 | 31KB |
+| アイテム | `images/items/item_handgun_ammo.png` | 拳銃の弾：敵1体に 18 ダメージを与える。 | 29KB |
+| アイテム | `images/items/item_smoke.png` | 煙幕弾：12 ブロックを得る。 | 32KB |
+| アイテム | `images/items/item_poison_vial.png` | 毒の小瓶：敵1体に毒 6 を与える。 | 33KB |
+| アイテム | `images/items/item_steroid.png` | 筋肉増強剤：筋力 2 を得る（この戦闘中）。 | 31KB |
+| アイテム | `images/items/item_flashbang.png` | 閃光弾：敵全体の行動を1ターン封じる。 | 28KB |
+| アイテム | `images/items/item_first_aid_spray.png` | 救急スプレー：HP を全回復する。 | 30KB |
+| アイテム | `images/items/item_herb_mix.png` | 調合ハーブ：HP を最大HPの 50% 回復する。 | 32KB |
+| アイテム | `images/items/key_red.png` | 赤い鍵 | 7KB |
+| アイテム | `images/items/key_blue.png` | 青い鍵 | 7KB |
+| アイテム | `images/items/key_yellow.png` | 黄色い鍵 | 7KB |
+| アイテム | `images/items/key_green.png` | 緑の鍵 | 7KB |
+| 装備 | `images/equipment/eq_rusty_knife.png` | 錆びたナイフ：攻撃力 +2 | 30KB |
+| 装備 | `images/equipment/eq_fire_axe.png` | 消防斧：攻撃力 +4 / 運 -1 | 30KB |
+| 装備 | `images/equipment/eq_handgun.png` | 古びた拳銃：攻撃力 +3 / 運 +2 | 27KB |
+| 装備 | `images/equipment/eq_ritual_dagger.png` | 儀式の短剣：攻撃力 +2 / 魔力 +4 | 30KB |
+| 装備 | `images/equipment/eq_chainsaw.png` | チェーンソー：攻撃力 +8 / 防御力 -2 戦闘開始時 筋力+1 | 30KB |
+| 装備 | `images/equipment/eq_magnum.png` | マグナム：攻撃力 +6 / 運 +4 最大AP +1 | 25KB |
+| 装備 | `images/equipment/eq_leather_jacket.png` | 革のジャケット：防御力 +2 | 29KB |
+| 装備 | `images/equipment/eq_riot_vest.png` | 防弾ベスト：防御力 +4 / 体力 +1 | 27KB |
+| 装備 | `images/equipment/eq_lab_coat.png` | 血染めの白衣：防御力 +1 / 魔力 +4 | 28KB |
+| 装備 | `images/equipment/eq_thorn_mail.png` | 茨の鎖帷子：防御力 +3 戦闘開始時 棘3 | 30KB |
+| 装備 | `images/equipment/eq_hazmat_suit.png` | 防護服：防御力 +6 / 体力 +3 | 24KB |
+| 装備 | `images/equipment/eq_abyss_cloak.png` | 深淵の外套：防御力 +4 / 魔力 +4 最大AP +1 | 24KB |
+| 装備 | `images/equipment/eq_lucky_coin.png` | 幸運のコイン：運 +4 | 31KB |
+| 装備 | `images/equipment/eq_old_rosary.png` | 古いロザリオ：魔力 +3 / 体力 +1 | 32KB |
+| 装備 | `images/equipment/eq_dog_tag.png` | 兵士の認識票：攻撃力 +2 / 防御力 +2 | 28KB |
+| 装備 | `images/equipment/eq_regen_ring.png` | 再生の指輪：体力 +2 戦闘開始時 再生3 | 29KB |
+| 装備 | `images/equipment/eq_energy_core.png` | 鼓動するコア：最大AP +1 | 25KB |
+| 装備 | `images/equipment/eq_eye_amulet.png` | 見開く眼の護符：運 +8 / 魔力 +2 | 31KB |
+| 効果音(SE) | `audio/se/se_click.wav` | se_click：ボタン決定 | 5KB |
+| 効果音(SE) | `audio/se/se_hover.wav` | se_hover：ボタンにカーソルが乗った時 | 3KB |
+| 効果音(SE) | `audio/se/se_cancel.wav` | se_cancel：キャンセル・戻る | 8KB |
+| 効果音(SE) | `audio/se/se_error.wav` | se_error：AP不足など操作できない時 | 13KB |
+| 効果音(SE) | `audio/se/se_text.wav` | se_text：メッセージの文字送り | 1KB |
+| 効果音(SE) | `audio/se/se_card_draw.wav` | se_card_draw：カードを引く | 8KB |
+| 効果音(SE) | `audio/se/se_card_play.wav` | se_card_play：カードを使う | 15KB |
+| 効果音(SE) | `audio/se/se_card_exhaust.wav` | se_card_exhaust：カードを廃棄 | 30KB |
+| 効果音(SE) | `audio/se/se_shuffle.wav` | se_shuffle：捨て札をシャッフル | 26KB |
+| 効果音(SE) | `audio/se/se_slash.wav` | se_slash：攻撃（斬撃） | 15KB |
+| 効果音(SE) | `audio/se/se_hit.wav` | se_hit：攻撃が命中 | 17KB |
+| 効果音(SE) | `audio/se/se_crit.wav` | se_crit：クリティカル | 39KB |
+| 効果音(SE) | `audio/se/se_block.wav` | se_block：ブロック獲得・防御 | 26KB |
+| 効果音(SE) | `audio/se/se_buff.wav` | se_buff：バフ | 30KB |
+| 効果音(SE) | `audio/se/se_debuff.wav` | se_debuff：デバフ | 34KB |
+| 効果音(SE) | `audio/se/se_heal.wav` | se_heal：回復 | 43KB |
+| 効果音(SE) | `audio/se/se_enemy_attack.wav` | se_enemy_attack：敵の攻撃 | 22KB |
+| 効果音(SE) | `audio/se/se_player_hurt.wav` | se_player_hurt：プレイヤー被弾 | 26KB |
+| 効果音(SE) | `audio/se/se_evade.wav` | se_evade：回避 | 13KB |
+| 効果音(SE) | `audio/se/se_enemy_die.wav` | se_enemy_die：敵撃破 | 56KB |
+| 効果音(SE) | `audio/se/se_gold.wav` | se_gold：お金を得る・購入 | 26KB |
+| 効果音(SE) | `audio/se/se_levelup.wav` | se_levelup：レベルアップ | 69KB |
+| 効果音(SE) | `audio/se/se_door.wav` | se_door：扉を開ける・階移動 | 69KB |
+| 効果音(SE) | `audio/se/se_chest.wav` | se_chest：宝箱を開ける | 65KB |
+| 効果音(SE) | `audio/se/se_heartbeat.wav` | se_heartbeat：HP低下時の心音 | 39KB |
+| 効果音(SE) | `audio/se/se_roll.wav` | se_roll：ステータスのルーレット | 11KB |
+| 効果音(SE) | `audio/se/se_talent.wav` | se_talent：才能開花 | 95KB |
+| 効果音(SE) | `audio/se/se_turn.wav` | se_turn：ターン開始 | 60KB |
+| 効果音(SE) | `audio/se/se_victory.wav` | se_victory：戦闘勝利ジングル | 112KB |
+| 効果音(SE) | `audio/se/se_defeat.wav` | se_defeat：ゲームオーバー | 151KB |
+| 効果音(SE) | `audio/se/se_stun.wav` | se_stun：封印 | 34KB |
+| 効果音(SE) | `audio/se/se_item.wav` | se_item：アイテム使用 | 26KB |
+| BGM | `audio/bgm/bgm_title.mp3` | bgm_title：タイトル画面 | 422KB |
+| BGM | `audio/bgm/bgm_tower.mp3` | bgm_tower：塔の探索中 | 375KB |
+| BGM | `audio/bgm/bgm_battle.mp3` | bgm_battle：通常戦闘 | 410KB |
+| BGM | `audio/bgm/bgm_elite.mp3` | bgm_elite：強敵戦 | 360KB |
+| BGM | `audio/bgm/bgm_boss.mp3` | bgm_boss：ボス戦 | 322KB |
+| BGM | `audio/bgm/bgm_shop.mp3` | bgm_shop：ショップ（闇商人含む） | 352KB |
+| BGM | `audio/bgm/bgm_gameover.mp3` | bgm_gameover：ゲームオーバー | 235KB |
