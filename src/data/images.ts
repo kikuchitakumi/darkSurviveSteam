@@ -33,16 +33,37 @@ export const IMAGES = {
 
   // ---- UI ----
   logo: 'images/ui/ui_logo.png',
+  /** ボタン枠（9スライス：角32pxは伸びない） */
   button: 'images/ui/ui_button.png',
+  buttonPrimary: 'images/ui/ui_button_primary.png',
+  /** パネル枠（9スライス：角110pxは伸びない）。モーダル・メッセージ窓・報酬画面などで共通 */
   panel: 'images/ui/ui_panel.png',
   cardBack: 'images/ui/ui_card_back.png',
+  /** カード枠（レア度ごと）。イラスト窓は透明、説明欄は半透明 */
   cardFrame: {
-    attack: 'images/ui/ui_card_frame_attack.png',
-    defense: 'images/ui/ui_card_frame_defense.png',
-    buff: 'images/ui/ui_card_frame_buff.png',
-    debuff: 'images/ui/ui_card_frame_debuff.png',
-    special: 'images/ui/ui_card_frame_special.png',
+    basic: 'images/ui/ui_card_frame_bronze.png',
+    common: 'images/ui/ui_card_frame_silver.png',
+    rare: 'images/ui/ui_card_frame_gold.png',
+    legendary: 'images/ui/ui_card_frame_legendary.png',
   },
+  /** カードのコストの宝石（数字は上に CSS で表示） */
+  cardCostGem: 'images/ui/ui_card_cost_gem.png',
+  /** カードの種類のエンブレム（右上） */
+  cardType: {
+    attack: 'images/ui/ui_type_attack.png',
+    defense: 'images/ui/ui_type_defense.png',
+    buff: 'images/ui/ui_type_buff.png',
+    debuff: 'images/ui/ui_type_debuff.png',
+    special: 'images/ui/ui_type_special.png',
+  },
+  /** AP のクリスタル（点灯／消灯） */
+  apCrystal: 'images/ui/ui_ap_crystal.png',
+  apCrystalEmpty: 'images/ui/ui_ap_crystal_empty.png',
+  /** ターン終了ボタン（丸いメダリオン） */
+  endTurn: 'images/ui/ui_end_turn.png',
+  /** 主人公の肖像と、その枠 */
+  leaderFrame: 'images/ui/ui_leader_frame.png',
+  leaderPortrait: 'images/ui/ui_leader_portrait.png',
   intent: {
     attack: 'images/ui/intent_attack.png',
     debuff: 'images/ui/intent_debuff.png',

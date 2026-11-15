@@ -1,0 +1,162 @@
+/* =============================================================
+   hud.css  【スタイル：画面上部のステータスバー】
+   -------------------------------------------------------------
+   黒鉄のプレートに金の縁取り。階・HP・所持金・レベル・鍵・アイテム・各ボタン。
+   ============================================================= */
+.hud {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px 10px;
+  background: linear-gradient(180deg, rgba(6, 4, 3, 0.97) 0%, rgba(22, 16, 12, 0.93) 72%, rgba(10, 7, 5, 0) 100%);
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+}
+.hud::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 12px;
+  height: 2px;
+  background: var(--gold-line);
+  box-shadow: 0 0 10px rgba(255, 190, 90, 0.35);
+}
+.hud::before {
+  /* 中央の宝石飾り */
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 16px;
+  height: 16px;
+  transform: translateX(-50%) rotate(45deg);
+  background: radial-gradient(circle at 35% 35%, #ffb0a0, #b51e1e 55%, #3a0505);
+  border: 2px solid #e0aa45;
+  box-shadow: 0 0 10px rgba(255, 60, 40, 0.8);
+  z-index: 1;
+}
+.hud.visible { opacity: 1; transform: none; pointer-events: auto; }
+.hud-left, .hud-center, .hud-right { display: flex; align-items: center; gap: 22px; }
+.hud-icon { width: 44px; height: 44px; object-fit: contain; filter: drop-shadow(0 2px 3px #000); }
+
+.hud-floor { display: flex; align-items: center; gap: 8px; }
+.hud-floor-num {
+  font-family: var(--font-title);
+  font-size: 42px;
+  font-weight: 900;
+  line-height: 1;
+  background: var(--gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 1px #000);
+}
+.hud-floor-zone { font-size: 14px; color: var(--c-text-dim); white-space: nowrap; letter-spacing: 0.1em; }
+
+.hud-hp { display: flex; align-items: center; gap: 4px; }
+.hud-gold { display: flex; align-items: center; gap: 8px; min-width: 120px; }
+.hud-gold-text {
+  display: inline-block;
+  font-family: var(--font-title);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--c-gold-bright);
+  text-shadow: 0 2px 2px #000, 0 0 12px rgba(255, 190, 80, 0.4);
+}
+.hud-level { display: flex; flex-direction: column; gap: 4px; min-width: 120px; }
+.hud-level-text { font-family: var(--font-title); font-size: 24px; font-weight: 900; color: var(--c-text); text-shadow: 0 2px 2px #000; }
+
+.hud-keys { display: flex; gap: 4px; }
+.hud-key { position: relative; width: 46px; height: 46px; opacity: 0.25; filter: grayscale(1); transition: opacity 0.3s; }
+.hud-key.has { opacity: 1; filter: drop-shadow(0 0 6px rgba(255, 220, 140, 0.4)); }
+.hud-key img { width: 100%; height: 100%; object-fit: contain; }
+.hud-key span { position: absolute; right: -2px; bottom: -4px; font-family: var(--font-title); font-size: 17px; font-weight: 900; text-shadow: 0 0 4px #000, 0 0 4px #000, 0 0 4px #000; }
+
+.hud-items { display: flex; gap: 8px; margin-left: 10px; }
+.hud-item {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(40, 30, 24, 0.95), rgba(8, 6, 5, 0.95));
+  box-shadow: inset 0 0 0 2px rgba(140, 95, 22, 0.8), inset 0 0 0 4px rgba(0, 0, 0, 0.8), 0 3px 6px rgba(0, 0, 0, 0.7);
+}
+.hud-item.filled { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+.hud-item.filled:hover { transform: translateY(-3px) scale(1.1); box-shadow: inset 0 0 0 2px #ffe7a0, 0 0 18px rgba(255, 200, 120, 0.6); }
+.hud-item img { width: 58px; height: 58px; object-fit: contain; }
+
+.hud-btn { min-width: 0; padding: 0 12px; font-size: 19px; flex-direction: row; gap: 6px; border-width: 12px; border-image-width: 12px; }
+.hud-btn-icon { width: 30px; height: 30px; object-fit: contain; }
+.hud-btn .badge {
+  position: absolute;
+  top: -18px;
+  right: -18px;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 35% 35%, #ff8a7a, #b51e1e 60%, #4a0505);
+  border: 2px solid #e0aa45;
+  color: #fff;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  display: none;
+  animation: badgePulse 1.2s infinite;
+}
+.hud-btn .badge.visible { display: block; }
+@keyframes badgePulse { 50% { transform: scale(1.2); box-shadow: 0 0 14px #f33; } }
+.hud-seed { font-size: 13px; color: var(--c-text-dim); font-family: monospace; white-space: nowrap; }
+
+/* ---------- バー（HP・経験値・敵HP 共通） ---------- */
+.bar {
+  position: relative;
+  height: 26px;
+  border-radius: 13px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #050303, #1a1210);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 0 2px #2a1d10, 0 0 0 3px #b08a40, 0 0 0 5px rgba(0, 0, 0, 0.7);
+}
+.bar-hp { width: 250px; }
+.bar-hp.big { width: 230px; height: 30px; }
+.bar-exp { width: 120px; height: 8px; border-radius: 4px; box-shadow: inset 0 1px 3px #000, 0 0 0 1px #6a4a18; }
+.bar-enemy { width: 230px; height: 22px; }
+.bar-fill, .bar-lag { position: absolute; left: 0; top: 0; bottom: 0; width: 100%; transition: width 0.35s cubic-bezier(0.2, 0.8, 0.3, 1); border-radius: inherit; }
+.bar-lag { background: linear-gradient(180deg, #fff3d8, #c8a878); transition-duration: 0.8s; }
+.bar-fill.hp { background: linear-gradient(180deg, #ff6a5a 0%, #d42020 40%, #7a0606 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35); }
+.bar-fill.hp::after, .bar-fill.enemy-hp::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 2px;
+  height: 35%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0));
+}
+.bar-fill.hp.low { animation: hpLow 0.8s infinite; }
+@keyframes hpLow { 50% { filter: brightness(1.6); } }
+.bar-fill.exp { background: linear-gradient(90deg, #8a6a2a, #ffe7a0); box-shadow: 0 0 6px rgba(255, 220, 120, 0.6); }
+.bar-fill.enemy-hp { background: linear-gradient(180deg, #e05040 0%, #a01818 45%, #4a0404 100%); }
+.bar-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-title);
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 0 3px #000, 0 1px 2px #000, 0 0 6px #000;
+}
+.bar-hp.big .bar-text { font-size: 21px; }

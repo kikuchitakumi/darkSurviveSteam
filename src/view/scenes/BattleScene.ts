@@ -63,9 +63,9 @@ const PLAY_ZONE = { x: 960, y: 560 };
 const ENEMY_FOOT_Y = 650;
 /** 敵画像の基本の高さ（data/enemies.ts の scale が掛かる） */
 const ENEMY_BASE_HEIGHT = 300;
-const DRAW_POS = { x: 110, y: 990 };
+const DRAW_POS = { x: 360, y: 1000 };
 const DISCARD_POS = { x: 1810, y: 990 };
-const PLAYER_POS = { x: 960, y: 760 };
+const PLAYER_POS = { x: 170, y: 790 };
 
 export class BattleScene {
   root: HTMLElement;
@@ -153,17 +153,23 @@ export class BattleScene {
   // UI 構築
   // =========================================================
   private buildUi(): void {
-    // ---- プレイヤーパネル ----
+    // ---- 主人公（リーダー）：肖像＋金の枠＋HP ----
     const hpFill = h('div.bar-fill.hp');
     const hpLag = h('div.bar-lag');
     const hpText = h('div.bar-text');
-    const block = h('div.block-badge', {}, [img(IMAGES.icon.block), h('span')]);
-    const statuses = h('div.status-row');
+    const block = h('div.block-badge.leader-block', {}, [img(IMAGES.icon.block), h('span')]);
+    const statuses = h('div.status-row.leader-status');
     this.player = { hpFill, hpLag, hpText, block, statuses };
-    const panel = h('div.player-panel', {}, [h('div.player-label', {}, 'YOU'), h('div.player-hp', {}, [block, h('div.bar.bar-hp.big', {}, [hpLag, hpFill, hpText])]), statuses]);
+    const leader = h('div.leader', {}, [
+      h('div.leader-portrait', {}, img(IMAGES.leaderPortrait)),
+      h('div.leader-frame', {}, img(IMAGES.leaderFrame)),
+      block,
+    ]);
+    const hpPlate = h('div.leader-hp', {}, [img(IMAGES.icon.hp, 'leader-hp-icon'), h('div.bar.bar-hp.big', {}, [hpLag, hpFill, hpText])]);
+    const panel = h('div.player-panel', {}, [statuses, leader, hpPlate]);
 
-    // ---- AP ----
-    this.apOrb = h('div.ap-orb', {}, [h('div.ap-orb-ring'), h('div.ap-orb-text')]);
+    // ---- AP（クリスタルの数で表示） ----
+    this.apOrb = h('div.ap-panel', {}, [h('div.ap-label', {}, 'AP'), h('div.ap-crystals'), h('div.ap-text')]);
     attachTooltip(this.apOrb, () => ({ title: 'AP', body: t('stat.ap.desc') }));
 
     // ---- 山札・捨て札・廃棄 ----
@@ -336,7 +342,12 @@ export class BattleScene {
 
   private renderAp(pulse = false): void {
     const { ap, maxAp } = this.combat.player;
-    this.apOrb.querySelector('.ap-orb-text')!.textContent = `${ap}/${maxAp}`;
+    this.apOrb.querySelector('.ap-text')!.textContent = `${ap} / ${maxAp}`;
+    const box = this.apOrb.querySelector('.ap-crystals')!;
+    clear(box);
+    for (let i = 0; i < Math.max(ap, maxAp); i++) {
+      box.append(img(i < ap ? IMAGES.apCrystal : IMAGES.apCrystalEmpty, i < ap ? 'ap-crystal lit' : 'ap-crystal'));
+    }
     this.apOrb.classList.toggle('empty', ap <= 0);
     if (pulse) animate(this.apOrb, [{ transform: 'scale(1.25)', filter: 'brightness(1.8)' }, { transform: 'scale(1)', filter: 'brightness(1)' }], 300);
   }

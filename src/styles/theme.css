@@ -1,0 +1,145 @@
+/* =============================================================
+   theme.css  【スタイル：色・文字・画面の土台】
+   -------------------------------------------------------------
+   見た目の方向性：Shadowverse のような重厚なダークファンタジー
+     - 黒に近い焦げ茶をベースに、金（金属の光沢）と血の赤を差し色に
+     - 見出しは金属の質感の文字（.gold-text）
+     - 画面全体にビネット（周辺減光）とフィルムグレインで空気感を出す
+   ============================================================= */
+:root {
+  --font-jp: 'Shippori Mincho B1', 'Yu Mincho', 'YuMincho', 'Hiragino Mincho ProN', serif;
+  --font-title: 'Cinzel', 'Shippori Mincho B1', serif;
+
+  --c-bg: #07060a;
+  --c-text: #f0e4cc;
+  --c-text-dim: #a8987e;
+  --c-gold: #d9b26a;
+  --c-gold-bright: #ffe7a0;
+  --c-gold-dark: #8c5f16;
+  --c-blood: #a01212;
+  --c-blood-bright: #ff3b30;
+  --c-blue: #7ec0ff;
+  --c-green: #86ffb8;
+  --c-purple: #b48cff;
+
+  /* 金属の文字・線に使うグラデーション */
+  --gold-grad: linear-gradient(180deg, #fff6cc 0%, #f0c461 38%, #9a6a1c 52%, #e8b84e 70%, #fff0b0 100%);
+  --gold-line: linear-gradient(90deg, rgba(140, 95, 22, 0), #8c5f16 12%, #ffe7a0 50%, #8c5f16 88%, rgba(140, 95, 22, 0));
+  --panel-bg: linear-gradient(180deg, rgba(30, 22, 17, 0.96), rgba(10, 7, 6, 0.97));
+
+  --grain-url: none;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+body {
+  font-family: var(--font-jp);
+  color: var(--c-text);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+img { -webkit-user-drag: none; user-select: none; }
+#app { position: fixed; inset: 0; background: #000; }
+
+/* 金属の質感の文字（見出し・数字に使う） */
+.gold-text {
+  background: var(--gold-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 12px rgba(0, 0, 0, 0.6));
+}
+
+/* 金の飾り線（見出しの左右など） */
+.gold-rule {
+  height: 2px;
+  background: var(--gold-line);
+  box-shadow: 0 0 8px rgba(255, 200, 100, 0.35);
+}
+
+/* ---------- ステージとレイヤー ---------- */
+#stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: 0 0;
+  overflow: hidden;
+  background: var(--c-bg);
+  font-size: 26px;
+}
+.layer { position: absolute; inset: 0; }
+.layer-fx, .layer-fx-dom, .layer-overlay, .layer-toast { pointer-events: none; }
+.layer-hud, .layer-message, .layer-modal { pointer-events: none; }
+.layer-hud > *, .layer-message > *, .layer-modal > * { pointer-events: auto; }
+.layer-transition {
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+.layer-transition.active { opacity: 1; pointer-events: all; }
+.scene { position: absolute; inset: 0; }
+
+/* 背景（クロスフェード・ゆっくり動く・マウスに合わせて少しずれる＝奥行き） */
+.layer-bg { transform: translate(calc(var(--px, 0) * -14px), calc(var(--py, 0) * -10px)); transition: transform 0.6s ease-out; }
+.bg-image {
+  position: absolute;
+  inset: -3%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.bg-image.visible { opacity: 1; }
+.bg-drift { animation: bgDrift 40s ease-in-out infinite alternate; }
+@keyframes bgDrift {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.06) translate(-1%, -0.5%); }
+}
+.bg-tint { position: absolute; inset: 0; mix-blend-mode: multiply; }
+[data-quality='low'] .bg-drift { animation: none; }
+[data-quality='low'] .layer-bg { transform: none; }
+
+/* ---------- 画面全体の空気感 ---------- */
+.vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, 0.5) 78%, rgba(0, 0, 0, 0.9) 100%);
+}
+.grain {
+  position: absolute;
+  inset: -100px;
+  background-image: var(--grain-url);
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  animation: grain 0.5s steps(6) infinite;
+}
+[data-quality='low'] .grain { display: none; }
+[data-quality='medium'] .grain { animation-duration: 1s; }
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-40px, 20px); }
+  40% { transform: translate(30px, -50px); }
+  60% { transform: translate(-20px, 60px); }
+  80% { transform: translate(50px, 10px); }
+  100% { transform: translate(0, 0); }
+}
+.hurt-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(120, 0, 0, 0.15) 20%, rgba(170, 0, 0, 0.85) 100%);
+}
+.hurt-flash.on { animation: hurt 0.6s ease-out; }
+@keyframes hurt { 0% { opacity: var(--strength, 1); } 100% { opacity: 0; } }
+.lowhp-pulse {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 50%, rgba(140, 0, 0, 0.6) 100%);
+}
+.lowhp-pulse.on { animation: lowhp 1.1s ease-in-out infinite; }
+@keyframes lowhp { 0%, 100% { opacity: 0.2; } 15% { opacity: 0.9; } 30% { opacity: 0.35; } 45% { opacity: 0.8; } }

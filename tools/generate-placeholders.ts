@@ -43,7 +43,7 @@ interface Spec {
 // ---- 絵文字の割り当て（仮画像のシンボル） ----
 const CARD_SYMBOL: Record<string, string> = {
   strike: '🗡️', defend: '🛡️', seal: '📜', rage: '💢', scavenge: '♻️', executioner: '🪓', flurry: '⚔️', shotgun: '💥',
-  hellfire: '🔥', iron_wall: '🧱', toxic_mist: '☣️', terror: '👻', adrenaline: '💉', blood_pact: '🩸', first_aid: '🩹',
+  hellfire: '🔥', iron_wall: '🧱', toxic_mist: '☣️', terror: '👁️', adrenaline: '💉', blood_pact: '🩸', first_aid: '🩹',
 };
 const ITEM_SYMBOL: Record<string, string> = {
   potion: '🧪', stimulant: '💉', molotov: '🍾', handgun_ammo: '🔫', smoke: '💨', poison_vial: '☠️', steroid: '💪',
@@ -95,42 +95,68 @@ function buildSpecs(): Spec[] {
   list.push(spec(IMAGES.darkMerchant, 'figure', 520, 820, '人物：闇商人', { variant: 'dark' }));
   EVENTS.forEach((e) => e.object && list.push(spec(e.object, 'object', 480, 480, `イベント：${e.title}`, { symbol: e.id === 'whispering_altar' ? '💀' : e.id === 'bloody_box' ? '📦' : '🪖' })));
 
-  // ---- 敵 ----
+  // ---- 敵（体型と特徴。見た目のバリエーションを作るための仮の設定） ----
+  const ARCH: Record<string, Record<string, unknown>> = {
+    rot_rat: { archetype: 'beast' }, crawler: { archetype: 'beast' }, cog_hound: { archetype: 'beast' }, shade_eater: { archetype: 'beast' },
+    failed_chimera: { archetype: 'beast' }, boss_twin_hound: { archetype: 'beast', twinHead: true },
+    rusted_sentry: { archetype: 'humanoid', armored: true, weapon: true }, empty_armor: { archetype: 'humanoid', armored: true, weapon: true },
+    iron_jailer: { archetype: 'humanoid', armored: true }, boss_iron_executioner: { archetype: 'humanoid', armored: true, weapon: true },
+    incinerator_keeper: { archetype: 'humanoid', armored: true, weapon: true },
+    labcoat_revenant: { archetype: 'humanoid', stitches: true }, praying_corpse: { archetype: 'humanoid' }, specimen7: { archetype: 'humanoid', stitches: true },
+    steam_husk: { archetype: 'humanoid' }, hanged_marionette: { archetype: 'humanoid', stitches: true },
+    black_zealot: { archetype: 'humanoid', hooded: true }, boss_abyss_priest: { archetype: 'humanoid', hooded: true },
+    boss_stitched_nurse: { archetype: 'humanoid', stitches: true }, boss_writhing_researcher: { archetype: 'humanoid', stitches: true },
+    candle_wraith: { archetype: 'floating', candle: true }, eye_swarm: { archetype: 'floating', multiEye: true }, boss_belfry_wraith: { archetype: 'floating' },
+    choir_heads: { archetype: 'floating', multiHead: true }, boss_dawn_devourer: { archetype: 'blob', multiEye: true },
+  };
   ENEMIES.forEach((e) => {
     const kindLabel = e.kind === 'boss' ? `ボス(${e.bossFloor}F)` : e.kind === 'elite' ? '強敵' : '敵';
     const size = e.kind === 'boss' ? [600, 640] : [440, 480];
-    list.push(spec(e.image, 'enemy', size[0], size[1], `${kindLabel}：${e.name}`, { id: e.id, kind: e.kind, zone: e.zones[0] }));
+    list.push(spec(e.image, 'enemy', size[0], size[1], `${kindLabel}：${e.name}`, { id: e.id, kind: e.kind, zone: e.zones[0], archetype: 'blob', ...(ARCH[e.id] ?? {}) }));
   });
 
   // ---- カード ----
-  CARDS.forEach((c) => list.push(spec(c.image, 'cardArt', 400, 240, `カード絵：${c.name}`, { variant: c.type, symbol: CARD_SYMBOL[c.id] ?? '🃏' })));
-  for (const [type, p] of Object.entries(IMAGES.cardFrame)) list.push(spec(p, 'cardFrame', 440, 616, `カード枠(${type})`, { variant: type }));
-  list.push(spec(IMAGES.cardBack, 'cardBack', 220, 308, 'カード裏面'));
+  CARDS.forEach((c) => list.push(spec(c.image, 'cardArt', 480, 450, `カード絵：${c.name}`, { variant: c.type, symbol: CARD_SYMBOL[c.id] ?? '🃏' })));
+  for (const [rarity, p] of Object.entries(IMAGES.cardFrame)) list.push(spec(p, 'cardFrame', 440, 616, `カード枠(${rarity})`, { variant: rarity }));
+  list.push(spec(IMAGES.cardBack, 'cardBack', 440, 616, 'カード裏面'));
+  list.push(spec(IMAGES.cardCostGem, 'costGem', 128, 128, 'カードのコスト宝石'));
+  const typeIcon: Record<string, [string, number]> = { attack: ['⚔️', 0], defense: ['🛡️', 215], buff: ['🔺', 38], debuff: ['🌀', 275], special: ['✴️', 150] };
+  for (const [type, p] of Object.entries(IMAGES.cardType)) list.push(spec(p, 'medallionIcon', 96, 96, `カード種別：${type}`, { symbol: typeIcon[type][0], hue: typeIcon[type][1], sat: 70 }));
 
-  // ---- アイテム・鍵・装備 ----
-  ITEMS.forEach((i) => list.push(spec(i.image, 'icon', 160, 160, `アイテム：${i.name}`, { symbol: ITEM_SYMBOL[i.id] ?? '🧪', short: i.name })));
-  const keyTint: Record<string, string> = { red: 'rgba(255,60,60,0.55)', blue: 'rgba(60,120,255,0.55)', yellow: 'rgba(255,220,40,0.5)', green: 'rgba(60,220,100,0.5)' };
-  Object.values(KEYS).forEach((k) => list.push(spec(k.image, 'icon', 128, 128, `鍵：${k.name}`, { symbol: '🗝️', tint: keyTint[k.color], short: k.name, circle: false })));
-  EQUIPMENT.forEach((e) => list.push(spec(e.image, 'icon', 160, 160, `装備：${e.name}`, { symbol: EQUIP_SYMBOL[e.id] ?? '🛡️', short: e.name, ring: e.rarity === 'legendary' ? '#ffe28a' : e.rarity === 'rare' ? '#6fb3ff' : undefined })));
+  // ---- アイテム・鍵・装備（元の色を活かしたメダリオン） ----
+  ITEMS.forEach((i) => list.push(spec(i.image, 'itemIcon', 160, 160, `アイテム：${i.name}`, { symbol: ITEM_SYMBOL[i.id] ?? '🧪', rim: i.rarity === 'legendary' ? 'gold' : i.rarity === 'rare' ? 'silver' : 'bronze', hue: 25 })));
+  Object.values(KEYS).forEach((k) => list.push(spec(k.image, 'keyIcon', 128, 128, `鍵：${k.name}`, { variant: k.color })));
+  EQUIPMENT.forEach((e) => list.push(spec(e.image, 'itemIcon', 160, 160, `装備：${e.name}`, { symbol: EQUIP_SYMBOL[e.id] ?? '🛡️', rim: e.rarity === 'legendary' ? 'gold' : e.rarity === 'rare' ? 'silver' : 'bronze', hue: e.slot === 'weapon' ? 5 : e.slot === 'armor' ? 215 : 280, mode: 'relief', emblemMetal: e.rarity === 'legendary' ? 'gold' : e.rarity === 'rare' ? 'silver' : 'bronze' })));
 
-  // ---- 状態異常・意図 ----
-  Object.values(STATUS_EFFECTS).forEach((s) => list.push(spec(s.icon, 'icon', 64, 64, `状態：${s.name}`, { symbol: STATUS_SYMBOL[s.id], bg: s.polarity === 'buff' ? 'rgba(120,80,10,0.95)' : 'rgba(70,20,110,0.95)' })));
-  const intents: Record<string, [string, string, string]> = {
-    attack: ['⚔️', 'rgba(140,10,10,0.95)', '意図：攻撃'], debuff: ['🌀', 'rgba(70,20,110,0.95)', '意図：デバフ'], buff: ['🔺', 'rgba(140,90,10,0.95)', '意図：バフ'],
-    block: ['🛡️', 'rgba(20,60,120,0.95)', '意図：ブロック'], special: ['✴️', 'rgba(20,90,50,0.95)', '意図：特殊'], stun: ['🔒', 'rgba(60,60,60,0.95)', '意図：封印中'],
+  // ---- 状態異常・意図（金の浮き彫りメダリオン） ----
+  Object.values(STATUS_EFFECTS).forEach((s) => list.push(spec(s.icon, 'medallionIcon', 72, 72, `状態：${s.name}`, { symbol: STATUS_SYMBOL[s.id], hue: s.polarity === 'buff' ? 35 : 275, sat: 70 })));
+  const intents: Record<string, [string, number, string]> = {
+    attack: ['⚔️', 0, '意図：攻撃'], debuff: ['🌀', 275, '意図：デバフ'], buff: ['🔺', 38, '意図：バフ'],
+    block: ['🛡️', 215, '意図：ブロック'], special: ['✴️', 150, '意図：特殊'], stun: ['🔒', 0, '意図：封印中'],
   };
-  for (const [k, p] of Object.entries(IMAGES.intent)) list.push(spec(p, 'icon', 96, 96, intents[k][2], { symbol: intents[k][0], bg: intents[k][1] }));
+  for (const [k, p] of Object.entries(IMAGES.intent)) list.push(spec(p, 'medallionIcon', 112, 112, intents[k][2], { symbol: intents[k][0], hue: intents[k][1], sat: k === 'stun' ? 0 : 75, emblemMetal: k === 'stun' ? 'silver' : 'gold' }));
 
   // ---- UI ----
-  const icons: Record<string, [string, string]> = {
-    gold: ['🪙', 'アイコン：所持金'], hp: ['❤️', 'アイコン：HP'], ap: ['🔥', 'アイコン：AP'], block: ['🛡️', 'アイコン：ブロック'], deck: ['🂠', 'アイコン：山札/デッキ'],
-    discard: ['🗑️', 'アイコン：捨て札'], exhaust: ['💀', 'アイコン：廃棄'], floor: ['🗼', 'アイコン：階'], menu: ['⚙️', 'アイコン：メニュー'], status: ['📊', 'アイコン：ステータス'],
+  const icons: Record<string, [string, string, number]> = {
+    gold: ['🪙', 'アイコン：所持金', 40], hp: ['❤️', 'アイコン：HP', 0], ap: ['🔥', 'アイコン：AP', 20], block: ['🛡️', 'アイコン：ブロック', 215], deck: ['🂠', 'アイコン：山札/デッキ', 25],
+    discard: ['♻️', 'アイコン：捨て札', 25], exhaust: ['💀', 'アイコン：廃棄', 275], floor: ['🗼', 'アイコン：階', 25], menu: ['⚙️', 'アイコン：メニュー', 25], status: ['📜', 'アイコン：ステータス', 25],
   };
-  for (const [k, p] of Object.entries(IMAGES.icon)) list.push(spec(p, 'icon', 96, 96, icons[k][1], { symbol: icons[k][0], circle: k === 'block' ? false : true }));
-  list.push(spec(IMAGES.button, 'button', 600, 120, 'ボタン枠'));
-  list.push(spec(IMAGES.panel, 'panel', 800, 600, 'パネル枠'));
+  for (const [k, p] of Object.entries(IMAGES.icon)) {
+    if (k === 'gold') list.push(spec(p, 'coin', 96, 96, icons[k][1]));
+    else if (k === 'block') list.push(spec(p, 'shield', 96, 96, icons[k][1]));
+    else if (k === 'hp') list.push(spec(p, 'medallionIcon', 96, 96, icons[k][1], { symbol: '❤️', hue: 0, sat: 70, emblemMetal: 'ruby', glow: 'rgba(255,40,40,0.8)' }));
+    else list.push(spec(p, 'medallionIcon', 96, 96, icons[k][1], { symbol: icons[k][0], hue: icons[k][2], sat: 45 }));
+  }
+  list.push(spec(IMAGES.apCrystal, 'apCrystal', 96, 128, 'AP クリスタル（点灯）', { variant: 'lit' }));
+  list.push(spec(IMAGES.apCrystalEmpty, 'apCrystal', 96, 128, 'AP クリスタル（消灯）', { variant: 'empty' }));
+  list.push(spec(IMAGES.endTurn, 'endTurn', 320, 320, 'ターン終了ボタン'));
+  list.push(spec(IMAGES.leaderFrame, 'leaderFrame', 400, 400, '主人公の肖像の枠'));
+  list.push(spec(IMAGES.leaderPortrait, 'portrait', 320, 320, '主人公の肖像（仮）'));
+  list.push(spec(IMAGES.button, 'button', 300, 96, 'ボタン枠', { variant: 'normal' }));
+  list.push(spec(IMAGES.buttonPrimary, 'button', 300, 96, 'ボタン枠（強調）', { variant: 'primary' }));
+  list.push(spec(IMAGES.panel, 'panel', 512, 512, 'パネル枠'));
   list.push(spec(IMAGES.logo, 'logo', 1200, 300, 'タイトルロゴ'));
-  list.push(spec('../favicon.png', 'icon', 64, 64, 'favicon', { symbol: '🗼', bg: 'rgba(100,0,0,0.95)' }));
+  list.push(spec('../favicon.png', 'medallionIcon', 64, 64, 'favicon', { symbol: '🗼', hue: 0, sat: 70 }));
 
   // 重複除去
   const seen = new Set<string>();

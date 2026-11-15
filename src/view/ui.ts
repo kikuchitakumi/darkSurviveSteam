@@ -39,8 +39,15 @@ class UI {
     initModal(this.stage.modal);
     bus.on('toast', ({ text, kind }) => this.toast(text, kind));
     this.makeGrainTexture();
-    // ボタン枠の透過画像を CSS 変数に設定（data/images.ts の button を差し替えれば全ボタンに反映）
-    document.documentElement.style.setProperty('--btn-img', `url("${asset(IMAGES.button)}")`);
+    // UI部品の画像を CSS 変数に登録（data/images.ts の画像を差し替えれば全画面に反映される）
+    const vars: Record<string, string> = {
+      '--btn-img': IMAGES.button,
+      '--btn-primary-img': IMAGES.buttonPrimary,
+      '--panel-img': IMAGES.panel,
+      '--end-turn-img': IMAGES.endTurn,
+      '--card-back-img': IMAGES.cardBack,
+    };
+    for (const [k, path] of Object.entries(vars)) document.documentElement.style.setProperty(k, `url("${asset(path)}")`);
   }
 
   /** 画面上部に短い通知を出す */
