@@ -57,7 +57,7 @@ export const SE = {
 
 /** BGM（ループ再生） */
 export const BGM = {
-  bgm_title: { file: 'audio/bgm/bgm_title.mp3', volume: 0.55, usage: 'タイトル画面' },
+  bgm_title: { file: 'audio/bgm/bgm_title_custom.mp3', volume: 0.55, usage: 'タイトル画面' },
   bgm_tower: { file: 'audio/bgm/bgm_tower.mp3', volume: 0.5, usage: '塔の探索中' },
   bgm_battle: { file: 'audio/bgm/bgm_battle.mp3', volume: 0.5, usage: '通常戦闘' },
   bgm_elite: { file: 'audio/bgm/bgm_elite.mp3', volume: 0.5, usage: '強敵戦' },
