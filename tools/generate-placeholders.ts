@@ -189,6 +189,7 @@ async function main() {
   await page.addStyleTag({ content: "@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@900&display=swap');" }).catch(() => {});
   await page.addScriptTag({ content: readFileSync(join(ROOT, 'tools', 'placeholder-draw.js'), 'utf8') });
   await page.addScriptTag({ content: readFileSync(join(ROOT, 'tools', 'card-draw.js'), 'utf8') });
+  await page.addScriptTag({ content: readFileSync(join(ROOT, 'tools', 'enemy-draw.js'), 'utf8') });
   await page.waitForTimeout(500);
 
   let made = 0;

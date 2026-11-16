@@ -2267,7 +2267,8 @@
     const h = spec.h;
     switch (spec.type) {
       case 'background': drawBackground(ctx, w, h, spec); break;
-      case 'enemy': drawEnemy(ctx, w, h, spec); break;
+      // 敵は tools/enemy-draw.js（設計図ごとの描き分け）。読み込まれていなければ旧来の汎用描画
+      case 'enemy': window.drawEnemyArt ? window.drawEnemyArt(ctx, w, h, spec) : drawEnemy(ctx, w, h, spec); break;
       case 'door': drawDoor(ctx, w, h, spec); break;
       case 'chest': drawChest(ctx, w, h, spec); break;
       case 'figure': drawFigure(ctx, w, h, spec); break;
