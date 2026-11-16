@@ -61,10 +61,12 @@ export class Stage {
         this.bg.style.setProperty('--py', ((e.clientY / window.innerHeight) * 2 - 1).toFixed(3));
       });
     });
-    // 要素へのフォーカス等でブラウザが勝手にスクロールすると画面がずれるため、常に0に戻す
+    // 要素へのフォーカス等でブラウザが勝手にスクロールすると画面がずれるため、常に0に戻す。
+    // ただし overflow: auto / scroll の要素（一覧・開発メニューの各欄など）は
+    // スクロールさせるための場所なので戻さない。
     document.addEventListener('scroll', (e) => {
       const t = e.target as HTMLElement | Document;
-      if (t instanceof HTMLElement && (t.scrollTop || t.scrollLeft) && !t.closest('.modal-body, .shop-shelf')) {
+      if (t instanceof HTMLElement && (t.scrollTop || t.scrollLeft) && !isScrollArea(t)) {
         t.scrollTop = 0;
         t.scrollLeft = 0;
       }
@@ -120,4 +122,10 @@ export class Stage {
   setLowHp(on: boolean): void {
     this.overlay.querySelector('.lowhp-pulse')!.classList.toggle('on', on);
   }
+}
+
+/** ユーザーがスクロールするための要素か（CSS で overflow: auto / scroll を指定した要素） */
+function isScrollArea(el: HTMLElement): boolean {
+  const cs = getComputedStyle(el);
+  return /auto|scroll/.test(cs.overflowY) || /auto|scroll/.test(cs.overflowX);
 }
