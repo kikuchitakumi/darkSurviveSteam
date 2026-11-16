@@ -25,6 +25,7 @@ import { settings } from '@/core/Settings';
 import { ui } from '../ui';
 import { createCardEl } from '../components/CardView';
 import { FrameBudget } from './frameBudget';
+import { IS_MOBILE } from '@/core/device';
 import {
   BODY_D, CARD_H, CARD_W, FRONT_Z, TYPE_COLOR, artTexture, blobTexture, boxWall, buildEnvMap, frameMapsFor, gemMat, geometries, invisible,
   ironMetal, orbGlass, readDescTokens, renderCostNumber, renderFace, renderPlate, trimMetal,
@@ -310,7 +311,8 @@ class Card3D {
  * 閉じた画面のレンダラーをここに戻して次の画面で使い回す。
  */
 const pool: { renderer: THREE.WebGLRenderer; canvas: HTMLCanvasElement; env: THREE.Texture }[] = [];
-const POOL_MAX = 3;
+// スマホはメモリが少ないため置いておかない（使い終わったらすぐ解放する）
+const POOL_MAX = IS_MOBILE ? 0 : 3;
 
 export class CardLayer {
   readonly canvas: HTMLCanvasElement;
@@ -339,7 +341,7 @@ export class CardLayer {
    * （作ったレンダラーは置き場に戻るので、最初の戦闘でカードを出した時に画面が止まらない）
    */
   static prewarm(): void {
-    if (pool.length) return;
+    if (pool.length || IS_MOBILE) return;
     const rarities = ['basic', 'common', 'rare', 'legendary'];
     const defs = rarities.map((r) => CARDS.find((c) => c.rarity === r)).filter((c): c is CardDef => !!c);
     const host = document.createElement('div');
@@ -373,7 +375,7 @@ export class CardLayer {
     if (!gl) {
       const canvas = document.createElement('canvas');
       canvas.className = 'card-gl-canvas';
-      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true });
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: !IS_MOBILE, premultipliedAlpha: true });
       renderer.outputColorSpace = THREE.SRGBColorSpace;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
       renderer.setClearColor(0x000000, 0);
@@ -409,7 +411,7 @@ export class CardLayer {
   /** 描画解像度の倍率（画質設定で上限を変える。高解像度の画面で 2倍描くと重い） */
   private pixelRatio(): number {
     const q = settings.current.quality;
-    const cap = q === 'high' ? 1.5 : q === 'medium' ? 1.25 : 1;
+    const cap = IS_MOBILE ? 1 : q === 'high' ? 1.5 : q === 'medium' ? 1.25 : 1;
     return Math.min(cap, Math.max(1, window.devicePixelRatio * ui.stage.scale)) * this.dynScale;
   }
 

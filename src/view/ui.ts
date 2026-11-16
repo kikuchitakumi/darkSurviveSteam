@@ -47,7 +47,8 @@ class UI {
       '--end-turn-img': IMAGES.endTurn,
       '--card-back-img': IMAGES.cardBack,
     };
-    for (const [k, path] of Object.entries(vars)) document.documentElement.style.setProperty(k, `url("${asset(path)}")`);
+    // CSS 変数の相対パスは「使う側の CSS ファイル」基準で解決されてしまう（本番では assets/assets/... になる）ため、絶対 URL にして渡す
+    for (const [k, path] of Object.entries(vars)) document.documentElement.style.setProperty(k, `url("${new URL(asset(path), document.baseURI).href}")`);
   }
 
   /** 画面上部に短い通知を出す */

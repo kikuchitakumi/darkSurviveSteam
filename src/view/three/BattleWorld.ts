@@ -16,6 +16,7 @@ import { settings } from '@/core/Settings';
 import { ui } from '../ui';
 import { loadImage } from './cardAssets';
 import { FrameBudget } from './frameBudget';
+import { IS_MOBILE } from '@/core/device';
 
 const W = 1920;
 const H = 1080;
@@ -297,6 +298,7 @@ export class BattleWorld {
    * （最初の戦闘に入った時に画面が止まらないようにする）
    */
   static prewarm(): void {
+    if (IS_MOBILE) return;
     if (shared && shared.aa === (settings.current.quality === 'high')) return;
     try {
       const w = new BattleWorld(document.createElement('div'), null, { backdrop: '' }, true);
@@ -318,7 +320,7 @@ export class BattleWorld {
   private constructor(parent: HTMLElement, before: Node | null, private opts: BattleWorldOptions, warmOnly = false) {
     const q = settings.current.quality;
     // 背景は多少ぼけても目立たないので、アンチエイリアスは「高」画質の時だけ
-    const aa = q === 'high';
+    const aa = q === 'high' && !IS_MOBILE;
     active?.dispose();
     if (!shared || shared.aa !== aa) {
       shared?.renderer.dispose();
@@ -336,7 +338,7 @@ export class BattleWorld {
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
     // 影：柱や燭台は動かないので、影は最初に1回だけ計算して使い回す（毎フレーム計算すると重い）
-    this.renderer.shadowMap.enabled = q !== 'low';
+    this.renderer.shadowMap.enabled = q !== 'low' && !IS_MOBILE;
     this.renderer.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.shadowMap.needsUpdate = true;
@@ -598,12 +600,18 @@ export class BattleWorld {
     window.removeEventListener('pointermove', this.onMove);
     window.removeEventListener('resize', this.onResize);
     // マテリアルは dispose しない（dispose するとシェーダーも捨てられ、次の戦闘で作り直しになる）
-    this.disposables.forEach((d) => { if (!(d instanceof THREE.Material)) d.dispose(); });
+    // （スマホはメモリが少ないため、マテリアルもレンダラーもすぐに解放する）
+    this.disposables.forEach((d) => { if (IS_MOBILE || !(d instanceof THREE.Material)) d.dispose(); });
     // レンダラーとキャンバスは次の戦闘で使い回す（シェーダーを作り直さないため）
     if (active === this) {
       active = null;
       this.canvas.remove();
       this.renderer.renderLists.dispose();
+      if (IS_MOBILE && shared) {
+        shared.renderer.dispose();
+        shared.renderer.forceContextLoss();
+        shared = null;
+      }
     }
   }
 }
