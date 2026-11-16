@@ -99,7 +99,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 220px;
+  top: 215px;
   text-align: center;
   font-size: 12px;
   letter-spacing: 0.25em;
@@ -110,8 +110,8 @@
   position: absolute;
   left: 22px;
   right: 22px;
-  top: 236px;
-  bottom: 22px;
+  top: 230px;
+  bottom: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -121,7 +121,9 @@
   text-shadow: 0 1px 3px #000;
 }
 .card-desc-inner { display: block; }
-.card-desc.long { font-size: 13.5px; line-height: 1.35; }
+.card-desc.long { font-size: 13px; line-height: 1.3; top: 218px; }
+/* 説明が長いカードは「種類」の小見出しを省く（リボンの色とエンブレムで種類は分かる） */
+.card-tilt:has(.card-desc.long) .card-type { display: none; }
 .card-desc .num { font-family: var(--font-title); font-weight: 900; font-size: 20px; margin: 0 2px; color: #fff; }
 .card-desc .num-up { color: #8dff9b; text-shadow: 0 0 6px rgba(80, 255, 120, 0.5); }
 .card-desc .num-down { color: #ff8b8b; }

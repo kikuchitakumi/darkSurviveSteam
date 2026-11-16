@@ -13,9 +13,10 @@
     "typecheck": "tsc --noEmit",
     "gen:images": "tsx tools/generate-placeholders.ts",
     "gen:audio": "tsx tools/generate-audio.ts",
-    "gen:all": "npm run gen:images && npm run gen:audio && npm run assets:list",
+    "gen:all": "npm run gen:images && npm run gen:audio && npm run assets:list && npm run art:prompts",
     "assets:list": "tsx tools/asset-list.ts",
     "sim": "tsx tools/simulate.ts",
+    "art:prompts": "tsx tools/art-prompts.ts",
     "i18n:check": "tsx tools/i18n-check.ts",
     "screenshot": "tsx tools/screenshot.ts",
     "electron": "npm run build && electron ."

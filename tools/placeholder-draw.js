@@ -601,7 +601,12 @@
         ctx.fillRect(Math.max(vx - backW / 2, x + 1), y + 1, 58, 20);
       }
     }
-    const isWindow = spec.kind !== 'battle' || spec.theme === 'tower3' || spec.theme === 'tower5';
+    // 戦闘画面は敵が中央に立つので窓は置かず、天井からの光で明るさを出す
+    const isWindow = spec.kind !== 'battle';
+    if (!isWindow) {
+      godRays(ctx, vx, -80, h * 1.2, 0.7, 14, theme.light, r, Math.PI / 2);
+      glow(ctx, vx, floorY + 40, w * 0.45, theme.light, 0.35);
+    }
     if (isWindow) roseWindow(ctx, vx, floorY - backH * 0.62, backW * 0.24, theme, r);
     // 奥の扉口（暗い）
     gothicArchPath(ctx, vx - backW * 0.13, floorY, backW * 0.26, backH * 0.42);

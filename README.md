@@ -43,6 +43,7 @@ npm run electron     # デスクトップ版（Steam版の土台）
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | プログラムの構成（MVC）とフォルダの役割 |
 | [docs/HOW_TO_ADD_CONTENT.md](docs/HOW_TO_ADD_CONTENT.md) | カード・敵・イベントの追加方法、画像・音の差し替え、翻訳 |
 | [docs/ASSETS.md](docs/ASSETS.md) | 全素材の一覧（どの画像・音が何に使われているか。自動生成） |
+| [docs/ART_PROMPTS.md](docs/ART_PROMPTS.md) | 本番イラストを画像生成AIで作るためのプロンプト集（自動生成） |
 | [docs/STEAM_RELEASE.md](docs/STEAM_RELEASE.md) | Steam リリースまでの手順 |
 
 ## 仕様の解釈（仕様書に明記がなく、こちらで決めた点）
@@ -66,8 +67,15 @@ npm run electron     # デスクトップ版（Steam版の土台）
 | イベント | 仕様通り「20Gもらう / HP20回復」の1種類のみ有効。追加用のテンプレートを2つ用意（`enabled:false`） |
 | 背景画像の形式 | **WebP**（PNG だと1枚1.7MB → WebP で約35KB）。透過が必要な画像は PNG |
 
+## 見た目の方向性
+重厚なダークファンタジーのデジタルカードゲーム風（金属の装飾枠・宝石・金の浮き彫り）。
+- カード：レア度ごとの金属枠（ブロンズ／シルバー／ゴールド／レジェンド）、マウスに合わせた3D傾きと光沢、レア以上はホログラム
+- UI：ボタン・パネルは装飾枠の画像を9スライスで使用（どのサイズでも角が崩れない）
+- 戦闘：主人公の肖像（リーダー枠）・APクリスタル・丸いターン終了ボタン・意図のメダリオン
+
 ## 画像・音について
-- 現在の画像・効果音・BGM は全て **自動生成した仮素材** です（画像には用途とファイル名が書いてあります）。
+- 現在の画像・効果音・BGM は **自動生成した仮素材** です（タイトルBGMのみカスタム曲）。画像の右下に用途とファイル名が小さく書いてあります。
+- 本番のイラストは [docs/ART_PROMPTS.md](docs/ART_PROMPTS.md) のプロンプトで画像生成AIを使って作れます（`npm run art:prompts` で再生成）。
 - `public/assets/` に **同じファイル名で上書き** すれば差し替わります。一覧は [docs/ASSETS.md](docs/ASSETS.md)。
 - 仮素材の再生成：`npm run gen:images` / `npm run gen:audio`（既存ファイルは上書きしません）
 

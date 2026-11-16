@@ -51,6 +51,16 @@ export class Stage {
     this.el = h('div#stage', {}, [this.bg, this.scene, this.fxCanvas, this.fxLayer, this.overlay, this.hud, this.message, this.modal, this.toast, this.transition]);
     root.append(this.el);
     window.addEventListener('resize', () => this.fit());
+    // マウスの位置に合わせて背景をわずかにずらす（奥行き感＝パララックス）
+    let raf = 0;
+    window.addEventListener('pointermove', (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        this.bg.style.setProperty('--px', ((e.clientX / window.innerWidth) * 2 - 1).toFixed(3));
+        this.bg.style.setProperty('--py', ((e.clientY / window.innerHeight) * 2 - 1).toFixed(3));
+      });
+    });
     // 要素へのフォーカス等でブラウザが勝手にスクロールすると画面がずれるため、常に0に戻す
     document.addEventListener('scroll', (e) => {
       const t = e.target as HTMLElement | Document;

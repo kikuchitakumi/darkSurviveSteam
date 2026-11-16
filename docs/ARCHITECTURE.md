@@ -52,7 +52,15 @@ src/
 │   ├─ ja.ts               …   日本語（基準）
 │   ├─ en.ts               …   英語
 │   └─ index.ts            …   翻訳関数 t() / td()
-└─ styles/main.css         … 全画面のスタイル
+└─ styles/                … 見た目（役割ごとに分割）
+    ├─ main.css            …   まとめて読み込む入口
+    ├─ theme.css           …   色・文字・画面全体の空気感
+    ├─ ui.css              …   ボタン・パネル・メッセージ窓・モーダル
+    ├─ hud.css             …   上部のステータスバー・HPバー
+    ├─ card.css            …   カード（枠・リボン・3D傾き・ホログラム）
+    ├─ battle.css          …   戦闘画面
+    ├─ fx.css              …   演出（ダメージ数字・斬撃・バナー）
+    └─ screens.css         …   タイトル・抽選・報酬・ショップ・終了画面など
 ```
 
 ## 戦闘の仕組み（ロジックと演出の分離）
@@ -85,6 +93,8 @@ src/
 | `npm run gen:images` | data/ を元に仮画像を自動生成（既存ファイルはスキップ） |
 | `npm run gen:audio` | 仮の効果音・BGM を自動生成（既存ファイルはスキップ） |
 | `npm run assets:list` | 素材一覧 docs/ASSETS.md を自動生成 |
+| `npm run art:prompts` | 本番イラスト用の AI プロンプト集 docs/ART_PROMPTS.md を自動生成 |
+| `npm run sim` | ボットに200回遊ばせて到達階の分布を表示（バランス確認） |
 | `npm run i18n:check` | 未翻訳の文言を一覧表示 |
 | `npm run screenshot -- <フォルダ>` | 自動プレイしてスクリーンショットを保存（要 `npm run dev`） |
 | `npm run electron` | デスクトップ版（Steam版の土台）を起動 |

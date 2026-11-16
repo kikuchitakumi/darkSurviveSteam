@@ -58,7 +58,7 @@ interface EnemyView {
 }
 
 // 画面レイアウト用の定数
-const HAND_Y = 948; // 手札カードの中心Y
+const HAND_Y = 905; // 手札カードの中心Y
 const PLAY_ZONE = { x: 960, y: 560 };
 const ENEMY_FOOT_Y = 650;
 /** 敵画像の基本の高さ（data/enemies.ts の scale が掛かる） */
