@@ -21,6 +21,7 @@
 import * as THREE from 'three';
 import { getCard, hasCard } from '@/data/cards';
 import type { CardDef } from '@/model/types';
+import { settings } from '@/core/Settings';
 import { ui } from '../ui';
 import {
   BODY_D, CARD_H, CARD_W, FRONT_Z, TYPE_COLOR, artTexture, blobTexture, boxWall, buildEnvMap, frameMapsFor, gemMat, geometries, invisible,
@@ -359,8 +360,11 @@ export class CardLayer {
     this.loop();
   }
 
+  /** 描画解像度の倍率（画質設定で上限を変える。高解像度の画面で 2倍描くと重い） */
   private pixelRatio(): number {
-    return Math.min(2, Math.max(1, window.devicePixelRatio * ui.stage.scale));
+    const q = settings.current.quality;
+    const cap = q === 'high' ? 1.5 : q === 'medium' ? 1.25 : 1;
+    return Math.min(cap, Math.max(1, window.devicePixelRatio * ui.stage.scale));
   }
 
   private loop = (): void => {

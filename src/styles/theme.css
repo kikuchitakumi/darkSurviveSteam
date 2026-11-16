@@ -115,10 +115,11 @@ img { -webkit-user-drag: none; user-select: none; }
   background-image: var(--grain-url);
   opacity: 0.06;
   mix-blend-mode: overlay;
-  animation: grain 0.5s steps(6) infinite;
+  /* 画面全体の合成をやり直すので、動きは控えめに（中画質以下は止める） */
+  animation: grain 1s steps(5) infinite;
 }
 [data-quality='low'] .grain { display: none; }
-[data-quality='medium'] .grain { animation-duration: 1s; }
+[data-quality='medium'] .grain { animation: none; }
 @keyframes grain {
   0% { transform: translate(0, 0); }
   20% { transform: translate(-40px, 20px); }

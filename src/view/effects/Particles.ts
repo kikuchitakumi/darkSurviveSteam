@@ -87,10 +87,20 @@ export class Particles {
     }
   }
 
+  /** 前のフレームで何か描いたか（何も無いフレームは消去も省く） */
+  private drewLast = true;
+
   private loop(t: number): void {
     const dt = Math.min(3, (t - this.last) / 16.67);
     this.last = t;
     const ctx = this.ctx;
+    if (!this.list.length && this.ambient === 'none') {
+      if (this.drewLast) ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      this.drewLast = false;
+      requestAnimationFrame((tt) => this.loop(tt));
+      return;
+    }
+    this.drewLast = true;
     ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
     // 環境パーティクルの補充

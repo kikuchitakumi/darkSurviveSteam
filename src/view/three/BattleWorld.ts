@@ -12,6 +12,7 @@
 // 質感の画像（石・木）は実行時に Canvas で作るので、画像ファイルは要らない。
 // =============================================================
 import * as THREE from 'three';
+import { settings } from '@/core/Settings';
 import { ui } from '../ui';
 import { loadImage } from './cardAssets';
 
@@ -259,6 +260,8 @@ export class BattleWorld {
   private beams: THREE.Mesh[] = [];
   private rune!: THREE.Mesh;
   private raf = 0;
+  /** 前回描いた時刻（背景なので 30fps に間引く） */
+  private lastDraw = 0;
   private disposed = false;
   private pointer = { x: 0, y: 0 };
   // カメラ：敵の足元（床の z=-250）が画面の y≈640、テーブルの奥の縁が y≈800 に来る位置
@@ -283,14 +286,19 @@ export class BattleWorld {
   private constructor(parent: HTMLElement, before: Node | null, private opts: BattleWorldOptions) {
     this.canvas = document.createElement('canvas');
     this.canvas.className = 'battle-world-canvas';
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true });
+    const q = settings.current.quality;
+    // 背景は多少ぼけても目立たないので、アンチエイリアスは「高」画質の時だけ
+    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: q === 'high', powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(W, H, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    // 影：柱や燭台は動かないので、影は最初に1回だけ計算して使い回す（毎フレーム計算すると重い）
+    this.renderer.shadowMap.enabled = q !== 'low';
+    this.renderer.shadowMap.type = q === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    this.renderer.shadowMap.autoUpdate = false;
+    this.renderer.shadowMap.needsUpdate = true;
     this.build();
     parent.insertBefore(this.canvas, before);
     window.addEventListener('pointermove', this.onMove);
@@ -298,8 +306,11 @@ export class BattleWorld {
     this.loop();
   }
 
+  /** 描画解像度の倍率。背景なので画面の解像度より上げない（高画質でも 1 まで） */
   private pixelRatio(): number {
-    return Math.min(1.5, Math.max(0.75, window.devicePixelRatio * ui.stage.scale));
+    const q = settings.current.quality;
+    const cap = q === 'high' ? 1 : q === 'medium' ? 0.85 : 0.7;
+    return Math.min(cap, Math.max(0.6, window.devicePixelRatio * ui.stage.scale));
   }
 
   private track<T extends { dispose(): void }>(o: T): T {
@@ -466,7 +477,7 @@ export class BattleWorld {
     s.add(fill);
 
     // ---- 漂う塵 ----
-    const n = 500;
+    const n = settings.current.quality === 'low' ? 150 : settings.current.quality === 'medium' ? 300 : 500;
     const pos = new Float32Array(n * 3);
     for (let i = 0; i < n; i++) {
       pos[i * 3] = (r() - 0.5) * 3000;
@@ -486,7 +497,13 @@ export class BattleWorld {
       return;
     }
     this.raf = requestAnimationFrame(this.loop);
-    const t = performance.now() / 1000;
+    const now = performance.now();
+    // 背景はゆっくりした動きしかないので 30fps で十分（GPU の負担を半分にする）
+    if (now - this.lastDraw < 30) return;
+    this.lastDraw = now;
+    // 画面を覆うパネル（山札の一覧など）が開いている間は描かない
+    if (ui.stage.modal.childElementCount > 0) return;
+    const t = now / 1000;
     // ろうそくの揺らぎ
     for (const c of this.candles) {
       const f = 0.82 + Math.sin(t * 9 + c.seed) * 0.06 + Math.sin(t * 23 + c.seed * 2) * 0.05 + Math.sin(t * 3.1 + c.seed) * 0.07;
@@ -502,15 +519,15 @@ export class BattleWorld {
     // 塵がゆっくり舞う
     const p = this.dust.geometry.getAttribute('position') as THREE.BufferAttribute;
     for (let i = 0; i < p.count; i++) {
-      let y = p.getY(i) + 0.25 + (i % 7) * 0.05;
+      let y = p.getY(i) + 0.5 + (i % 7) * 0.1; // 30fps なので1回の移動量は2倍
       if (y > 1400) y = 0;
       p.setY(i, y);
-      p.setX(i, p.getX(i) + Math.sin(t * 0.3 + i) * 0.25);
+      p.setX(i, p.getX(i) + Math.sin(t * 0.3 + i) * 0.5);
     }
     p.needsUpdate = true;
     // マウスに合わせてカメラをわずかに動かす（視差）
     const target = this.camBase.clone().add(new THREE.Vector3(this.pointer.x * 60, -this.pointer.y * 30, 0));
-    this.camera.position.lerp(target, 0.05);
+    this.camera.position.lerp(target, 0.1);
     this.camera.lookAt(this.lookAt);
     this.renderer.render(this.scene, this.camera);
   };
