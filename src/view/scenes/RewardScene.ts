@@ -11,6 +11,7 @@ import { t } from '@/i18n';
 import { animate, button, h, img, wait } from '../dom';
 import { ui } from '../ui';
 import { createCardEl } from '../components/CardView';
+import { CardLayer } from '../three/CardLayer';
 
 export interface RewardLine {
   icon: string;
@@ -73,6 +74,8 @@ export async function showRewards(lines: RewardLine[], cardChoices: string[], nu
       animate(el, [{ opacity: 0, transform: 'translateY(60px) rotateY(90deg)' }, { opacity: 1, transform: 'none' }], { duration: 450, delay: i * 120, easing: 'cubic-bezier(.2,1.1,.4,1)', fill: 'backwards' });
     });
     panel.append(cards, h('div.reward-buttons', {}, [button(t('reward.skipCard'), () => !done && resolve(null), { se: 'se_cancel' })]));
+    // カードを 3D で描く（overlay が消えると自動で片付く）
+    CardLayer.attach({ host: cards, parent: overlay });
   });
 
   await animate(overlay, [{ opacity: 1 }, { opacity: 0 }], { duration: 250, fill: 'forwards' });

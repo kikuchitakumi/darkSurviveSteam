@@ -34,7 +34,12 @@ src/
 │   ├─ components/         …   メッセージ窓・HUD・カード・モーダル・ツールチップ
 │   ├─ panels/             …   デッキ一覧・ステータス・オプション・装備比較
 │   ├─ scenes/             …   タイトル・抽選・戦闘・ショップ・報酬・終了画面
-│   └─ effects/            …   パーティクル・画面揺れ・ダメージ数字
+│   ├─ effects/            …   パーティクル・画面揺れ・ダメージ数字
+│   └─ three/              …   three.js による 3D 表示
+│       ├─ BattleWorld.ts  …     戦闘の背景（ろうそくの広間・床の魔法陣・テーブル）
+│       ├─ CardLayer.ts    …     カードを立体で描く層（DOM のカードの位置に毎フレーム重ねる。
+│       │                         DOM のカードは透明な当たり判定として残る）
+│       └─ cardAssets.ts   …     カードの立体の形・材質・文字のテクスチャ
 ├─ controller/             … 【Controller】ゲームの進行役
 │   ├─ GameController.ts   …   全体の流れ（タイトル→抽選→各階→クリア）
 │   ├─ BattleController.ts …   戦闘の進行

@@ -96,7 +96,7 @@ async function main() {
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);
   await page.locator('.hud-btn', { hasText: 'デッキ' }).click();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1500);
   await snap(page, 'deck');
   await page.keyboard.press('Escape');
   await page.waitForTimeout(300);

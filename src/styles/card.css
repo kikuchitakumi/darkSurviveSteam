@@ -287,3 +287,17 @@
 .card-grid .card { zoom: 0.92; }
 .card-grid.pickable .card { cursor: pointer; }
 .card-grid.pickable .card:hover .card-tilt { box-shadow: 0 0 0 2px #ff7a6a, 0 0 30px rgba(255, 60, 60, 0.7); }
+
+/* ---------- 3D 表示（three.js：src/view/three/CardLayer.ts） ----------
+   3D の層が動いている間は、DOM のカードの見た目を透明にして
+   クリック・ドラッグの当たり判定としてだけ使う */
+.gl-cards .card > .card-tilt { opacity: 0 !important; }
+.card-gl-canvas, .battle-world-canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  pointer-events: none;
+}
+.card-gl-canvas { z-index: 5; }

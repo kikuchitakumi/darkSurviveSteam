@@ -10,7 +10,14 @@ import { t } from '@/i18n';
 import type { DeckCard } from '@/model/GameState';
 import { h } from '../dom';
 import { createCardEl } from '../components/CardView';
-import { openModal } from '../components/Modal';
+import { openModal, type ModalHandle } from '../components/Modal';
+import { CardLayer } from '../three/CardLayer';
+
+/** 一覧のカードを 3D で描く（モーダルの本文の範囲だけ。閉じると自動で片付く） */
+function attach3D(m: ModalHandle, grid: HTMLElement): void {
+  const wrap = m.el.parentElement;
+  if (wrap) CardLayer.attach({ host: grid, parent: wrap, clip: m.body });
+}
 
 /** 種類 → コスト → 名前 の順に並べる */
 function sortDeck(cards: DeckCard[]): DeckCard[] {
@@ -31,7 +38,7 @@ export function setDeckNumbersProvider(fn: ((cardId: string) => Record<string, n
 
 export function showDeck(cards: DeckCard[], title = t('deck.title', { n: cards.length })): void {
   const grid = h('div.card-grid', {}, sortDeck(cards).map((c) => createCardEl(getCard(c.cardId), { uid: c.uid, numbers: numbersProvider?.(c.cardId) })));
-  openModal(title, grid, { cls: 'modal-wide' });
+  attach3D(openModal(title, grid, { cls: 'modal-wide' }), grid);
 }
 
 /** 山札の中身は順番が分からないよう並べ替えて表示する */
@@ -52,5 +59,6 @@ export function pickCard(cards: DeckCard[], title: string): Promise<DeckCard | n
       return el;
     }));
     const m = openModal(title, grid, { cls: 'modal-wide', onClose: () => resolve(picked) });
+    attach3D(m, grid);
   });
 }

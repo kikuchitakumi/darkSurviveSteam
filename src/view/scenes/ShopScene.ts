@@ -16,6 +16,7 @@ import type { ShopEntry, ShopStock } from '@/model/Loot';
 import { animate, button, clear, fmt, h, img } from '../dom';
 import { ui } from '../ui';
 import { createCardEl } from '../components/CardView';
+import { CardLayer } from '../three/CardLayer';
 import { attachTooltip } from '../components/Tooltip';
 import { equipDesc, equipName, itemDesc, itemName, keyName } from '../text';
 
@@ -44,6 +45,8 @@ export function showShop(stock: ShopStock, hd: ShopHandlers): Promise<void> {
     shelf,
   ]);
   root.append(wrap);
+  // 棚のカードを 3D で描く（棚の範囲の外は描かない。シーンが消えると自動で片付く）
+  CardLayer.attach({ host: shelf, parent: wrap, clip: shelf });
   animate(merchant, [{ opacity: 0, transform: 'translateX(-60px)' }, { opacity: 1, transform: 'none' }], { duration: 700, easing: 'ease-out' });
 
   const say = (text: string) => {

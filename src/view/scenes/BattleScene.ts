@@ -37,6 +37,8 @@ import { isModalOpen } from '../components/Modal';
 import { enemyDesc, enemyName, itemName, statusDesc, statusName } from '../text';
 import { showPile } from '../panels/DeckViewer';
 import type { AmbientKind } from '../effects/Particles';
+import { BattleWorld } from '../three/BattleWorld';
+import { CardLayer } from '../three/CardLayer';
 
 /** 表示用の参加者の状態 */
 interface VState {
@@ -83,6 +85,9 @@ export class BattleScene {
   private hintEl!: HTMLElement;
   private arrow!: SVGSVGElement;
   private arrowPath!: SVGPathElement;
+  /** 3D の背景（ろうそくの広間）と、3D のカード。WebGL が使えない時は null */
+  private world: BattleWorld | null = null;
+  private cardLayer: CardLayer | null = null;
 
   /** 表示用の状態（'p' = プレイヤー, 'e0'～'e2' = 敵） */
   private vState = new Map<string, VState>();
@@ -118,6 +123,10 @@ export class BattleScene {
     this.buildUi();
     this.root.append(this.handEl);
     stage.scene.append(this.root);
+    // ---- 3D：背景の広間（敵の後ろ）と、カード（敵の手前・狙いの矢印の後ろ） ----
+    const boss = combat.enemies.some((e) => e.def.kind === 'boss');
+    this.world = BattleWorld.attach(this.root, this.enemyLayer, { backdrop: opts.background, boss });
+    this.cardLayer = CardLayer.attach({ host: this.root, parent: this.root, before: this.arrow, handPitch: 8 });
 
     // 初期の表示状態（Combat.start() の前に作るので、山札＝デッキ全体）
     this.vState.set('p', { hp: combat.playerHp, maxHp: combat.gs.maxHp, block: 0, statuses: {} });
@@ -145,6 +154,8 @@ export class BattleScene {
   destroy(): void {
     window.removeEventListener('keydown', this.keyHandler);
     window.removeEventListener('pointermove', this.moveHandler);
+    this.world?.dispose();
+    this.cardLayer?.dispose();
     ui.hud.hpLock = false;
     ui.stage.setLowHp(false);
   }
