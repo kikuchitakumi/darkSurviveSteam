@@ -16,3 +16,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Firebase のルールの完成版（編集者のメールアドレス入り。公開しない）
+private/
