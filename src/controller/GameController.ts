@@ -59,6 +59,8 @@ function healAmount(def: ReturnType<typeof getItem>, mag: number): number {
 export class GameController {
   /** 現在のラン（タイトル画面では null） */
   gs: GameState | null = null;
+  /** デバッグ開始（好きな階から）で始めたランか。最高到達階の記録を汚さないために使う */
+  private isDebugRun = false;
   /** デバッグ・自動テスト用：次の階の選択肢を固定する（通常は null） */
   debugRoutes: RouteType[] | null = null;
 
@@ -95,14 +97,19 @@ export class GameController {
   private async titleLoop(): Promise<void> {
     while (true) {
       this.gs = null;
+      this.isDebugRun = false;
       ui.hud.bind(null);
       Audio.playBgm('bgm_title');
       const meta = Storage.loadMeta();
       const choice = await showTitle({ hasSave: Storage.hasSave(), bestFloor: meta.bestFloor });
-      if (choice === 'start') {
+      if (choice.action === 'start') {
         if (Storage.hasSave() && !(await confirmDialog(t('title.confirmNew')))) continue;
         Storage.deleteRun();
         await this.newRun();
+      } else if (choice.action === 'debug') {
+        if (Storage.hasSave() && !(await confirmDialog(t('title.confirmNew')))) continue;
+        Storage.deleteRun();
+        await this.newDebugRun(choice.floor);
       } else {
         const data = Storage.loadRun();
         if (!data) continue;
@@ -110,6 +117,18 @@ export class GameController {
       }
       await this.runLoop();
     }
+  }
+
+  // =========================================================
+  // デバッグ：好きな階から開始（ステータスはランダム・初期デッキ）
+  // =========================================================
+  private async newDebugRun(floor: number): Promise<void> {
+    const seed = Random.randomSeed();
+    const rng = new Random(seed ^ 0x5eed);
+    const result = rollStats(rng);
+    this.gs = GameState.create(seed, result.stats, result.talents, result.rich, STARTER_DECK);
+    this.gs.data.floor = Math.min(BALANCE.MAX_FLOOR, Math.max(1, Math.floor(floor)));
+    this.isDebugRun = true;
   }
 
   // =========================================================
@@ -143,7 +162,7 @@ export class GameController {
     if (!this.gs || this.gs.isDead) return;
     Storage.saveRun(this.gs.serialize());
     const meta = Storage.loadMeta();
-    if (this.gs.data.floor > meta.bestFloor) {
+    if (!this.isDebugRun && this.gs.data.floor > meta.bestFloor) {
       meta.bestFloor = this.gs.data.floor;
       Storage.saveMeta(meta);
     }

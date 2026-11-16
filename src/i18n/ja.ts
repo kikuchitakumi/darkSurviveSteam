@@ -52,6 +52,12 @@ export const ja = {
   'title.best': '最高到達: {n}F',
   'title.confirmNew': 'セーブデータがあります。\n新しく始めるとセーブデータは消えます。よろしいですか？',
   'title.pressStart': '— クリックして始める —',
+  'title.debug': 'DEBUG',
+  'title.sourceUpdated': 'ソース更新: {date}',
+  'debug.title': 'デバッグ：好きな階から開始',
+  'debug.floor': '開始する階（1〜{max}）',
+  'debug.start': 'この階から開始',
+  'debug.note': 'ステータスはランダム、デッキは初期デッキで始まります。',
 
   // ---- オプション ----
   'option.title': 'OPTION',

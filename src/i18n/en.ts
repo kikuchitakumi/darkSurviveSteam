@@ -38,6 +38,12 @@ export const en: Partial<Record<I18nKey, string>> & Record<string, string> = {
   'title.best': 'Best: {n}F',
   'title.confirmNew': 'A save already exists.\nStarting a new run will erase it. Continue?',
   'title.pressStart': '— Click to begin —',
+  'title.debug': 'DEBUG',
+  'title.sourceUpdated': 'Source updated: {date}',
+  'debug.title': 'Debug: start from any floor',
+  'debug.floor': 'Starting floor (1-{max})',
+  'debug.start': 'Start from this floor',
+  'debug.note': 'Stats are random and you begin with the starter deck.',
 
   'option.bgm': 'BGM Volume',
   'option.se': 'SE Volume',
