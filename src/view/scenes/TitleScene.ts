@@ -13,6 +13,7 @@ import { animate, button, clear, h } from '../dom';
 import { ui } from '../ui';
 import { openOptions } from '../panels/OptionsPanel';
 import { openDebugStart } from '../panels/DebugPanel';
+import { openEditor } from '@/editor/EditorApp';
 
 /** タイトル画面で選ばれたもの（debug は「好きな階から開始」） */
 export type TitleChoice = { action: 'start' | 'continue' } | { action: 'debug'; floor: number };
@@ -48,6 +49,10 @@ export function showTitle(opts: { hasSave: boolean; bestFloor: number }): Promis
           const floor = await openDebugStart();
           if (floor !== null) done({ action: 'debug', floor });
         }, { cls: 'title-btn title-btn-debug' })
+        : null,
+      // 開発メニュー（カード・敵・イベントの登録）：?debug=1 の時、または手元のPCで動かしている時だけ
+      GAME_CONFIG.DEBUG || GAME_CONFIG.DEV_HOST
+        ? button(t('title.devMenu'), () => openEditor(), { cls: 'title-btn title-btn-debug' })
         : null,
     ]);
     const footer = h('div.title-footer', {}, [

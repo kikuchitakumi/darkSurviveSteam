@@ -29,6 +29,7 @@
 .pop-heal { color: var(--c-green); font-size: 60px; }
 .pop-miss { color: #c8c8c8; font-size: 54px; letter-spacing: 0.1em; }
 .pop-poison { color: #9cff6b; font-size: 56px; }
+.pop-curse { color: #c890ff; font-size: 62px; text-shadow: 0 0 18px rgba(170, 80, 255, 0.95), 0 4px 0 #000; }
 
 .float-text { position: absolute; font-size: 32px; font-weight: 800; white-space: nowrap; color: var(--c-text); text-shadow: 0 2px 6px #000, 0 0 2px #000; }
 .float-buff { color: #ffd27a; }

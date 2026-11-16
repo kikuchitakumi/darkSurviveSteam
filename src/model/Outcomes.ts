@@ -69,7 +69,7 @@ export function applyOutcomes(gs: GameState, outcomes: EventOutcome[], rng: Rand
       case 'key': { const c = o.color === 'random' ? rng.pick(KEY_COLORS) : o.color; gs.addKey(c); res.notes.push({ text: labels.key(c), good: true }); break; }
       case 'stat': gs.addBaseStat(o.stat, o.amount); res.notes.push({ text: labels.stat(o.stat, o.amount), good: o.amount >= 0 }); break;
       case 'card': res.pending.push({ kind: 'card', cardId: o.cardId }); break;
-      case 'randomCard': res.pending.push({ kind: 'card', cardId: rollCardChoices(rng, 1)[0] }); break;
+      case 'randomCard': res.pending.push({ kind: 'card', cardId: rollCardChoices(rng, 1, gs.data.floor)[0] }); break;
       case 'equipment': res.pending.push({ kind: 'equipment', equipmentId: o.equipmentId }); break;
       case 'battle': res.pending.push({ kind: 'battle', elite: !!o.elite }); break;
       case 'nothing': break;

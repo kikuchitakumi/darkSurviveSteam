@@ -52,9 +52,17 @@ export const IMAGES = {
   cardType: {
     attack: 'images/ui/ui_type_attack.png',
     defense: 'images/ui/ui_type_defense.png',
+    support: 'images/ui/ui_type_support.png',
     buff: 'images/ui/ui_type_buff.png',
     debuff: 'images/ui/ui_type_debuff.png',
     special: 'images/ui/ui_type_special.png',
+  },
+  /** 攻撃の系統のエンブレム（剣・魔力・血・呪） */
+  cardElement: {
+    sword: 'images/ui/ui_element_sword.png',
+    magic: 'images/ui/ui_element_magic.png',
+    blood: 'images/ui/ui_element_blood.png',
+    curse: 'images/ui/ui_element_curse.png',
   },
   /** AP のクリスタル（点灯／消灯） */
   apCrystal: 'images/ui/ui_ap_crystal.png',

@@ -62,7 +62,7 @@ export async function runTreasure(ctx: GameController): Promise<void> {
       ui.fx.ring(p.x, p.y, 'rgba(255,220,120,0.9)', 360);
     }
 
-    const loot = rollTreasure(TREASURE_CHESTS[color], gs.rng);
+    const loot = rollTreasure(TREASURE_CHESTS[color], gs.rng, gs.data.floor);
     const got: string[] = [];
     if (loot.gold) { gs.addGold(loot.gold); got.push(`${loot.gold}G`); Audio.play('se_gold'); }
     for (const id of loot.items) {

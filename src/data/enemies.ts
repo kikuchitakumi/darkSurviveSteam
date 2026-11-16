@@ -280,7 +280,31 @@ export const ENEMIES: EnemyDef[] = [
   },
 ];
 
-const ENEMY_MAP = new Map(ENEMIES.map((e) => [e.id, e]));
+let ENEMY_MAP = new Map(ENEMIES.map((e) => [e.id, e]));
+
+/** 敵を追加・上書きする（開発メニュー / Firebase から） */
+export function upsertEnemies(defs: EnemyDef[]): void {
+  for (const d of defs) {
+    const i = ENEMIES.findIndex((e) => e.id === d.id);
+    if (i >= 0) ENEMIES[i] = d;
+    else ENEMIES.push(d);
+  }
+  ENEMY_MAP = new Map(ENEMIES.map((e) => [e.id, e]));
+}
+
+/** 敵を取り除く */
+export function removeEnemies(ids: string[]): void {
+  for (const id of ids) {
+    const i = ENEMIES.findIndex((e) => e.id === id);
+    if (i >= 0) ENEMIES.splice(i, 1);
+  }
+  ENEMY_MAP = new Map(ENEMIES.map((e) => [e.id, e]));
+}
+
+export function hasEnemy(id: string): boolean {
+  return ENEMY_MAP.has(id);
+}
+
 export function getEnemy(id: string): EnemyDef {
   const e = ENEMY_MAP.get(id);
   if (!e) throw new Error(`Unknown enemy id: ${id}`);

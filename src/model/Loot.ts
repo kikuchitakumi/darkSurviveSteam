@@ -7,7 +7,7 @@
 // 「何が手に入るか」の抽選は全てこのファイルにまとめている。
 // =============================================================
 import { BALANCE } from '@/config/balance';
-import { CARDS } from '@/data/cards';
+import { CARDS, cardWeightAt } from '@/data/cards';
 import { ITEMS, KEYS } from '@/data/items';
 import { EQUIPMENT } from '@/data/equipment';
 import { Random } from '@/core/Random';
@@ -30,16 +30,27 @@ export interface BattleReward {
   key: KeyColor | null;
 }
 
-/** カード報酬の候補（仕様：現在は初期デッキのカードのみ = pools に 'reward'） */
-export function rewardCardPool(): CardDef[] {
-  return CARDS.filter((c) => c.pools.includes('reward'));
+/** その階で報酬に出るカード（pools に 'reward' があり、出現階の範囲内のもの） */
+export function rewardCardPool(floor = 1, pool: CardDef['pools'][number] = 'reward'): CardDef[] {
+  return CARDS.filter((c) => c.pools.includes(pool) && cardWeightAt(c, floor) > 0);
 }
 
-export function rollCardChoices(rng: Random, n: number = BALANCE.CARD_REWARD_CHOICES): string[] {
-  const pool = rewardCardPool();
-  // 種類が足りない場合は重複を許す
-  if (pool.length >= n) return rng.sample(pool, n).map((c) => c.id);
-  return Array.from({ length: n }, () => rng.pick(pool).id);
+/**
+ * カードを n 枚抽選（同じカードは重複しない）。
+ * 各カードの「出やすさ」（cards.ts の weight・minFloor・maxFloor とレア度）で重み付けする。
+ */
+export function rollCardChoices(rng: Random, n: number = BALANCE.CARD_REWARD_CHOICES, floor = 1, pool: CardDef['pools'][number] = 'reward'): string[] {
+  let list = rewardCardPool(floor, pool);
+  if (!list.length) list = CARDS.filter((c) => c.pools.includes(pool));
+  const out: string[] = [];
+  const remaining = list.slice();
+  for (let i = 0; i < n && remaining.length; i++) {
+    const c = rng.weighted(remaining, (x) => cardWeightAt(x, floor) || 1);
+    out.push(c.id);
+    remaining.splice(remaining.indexOf(c), 1);
+  }
+  while (out.length < n && list.length) out.push(rng.pick(list).id);
+  return out;
 }
 
 function randomItem(rng: Random, pool: ItemDef['pools'][number]): ItemDef | null {
@@ -57,7 +68,7 @@ export function rollBattleReward(floor: number, kind: BattleKind, rng: Random): 
   const reward: BattleReward = {
     gold: rng.int(gmin, gmax),
     exp: BALANCE.rewardExp(floor, kind),
-    cardChoices: rollCardChoices(rng),
+    cardChoices: rollCardChoices(rng, BALANCE.CARD_REWARD_CHOICES, floor),
     itemId: null,
     equipmentId: null,
     key: null,
@@ -102,9 +113,8 @@ export function rollShop(floor: number, rng: Random): ShopStock {
   const entries: ShopEntry[] = [];
   if (!dark) {
     // ---- 通常の商人：カード5 / アイテム3 / 鍵1 / 装備1 ----
-    const cards = CARDS.filter((c) => c.pools.includes('shop'));
-    for (let i = 0; i < 5; i++) {
-      const c = rng.pick(cards);
+    for (const id of rollCardChoices(rng, 5, floor, 'shop')) {
+      const c = CARDS.find((x) => x.id === id)!;
       entries.push({ kind: 'card', id: c.id, price: priceOf(c.price, floor, false, rng), sold: false });
     }
     rng.sample(ITEMS.filter((i) => i.pools.includes('shop')), 3).forEach((it) => entries.push({ kind: 'item', id: it.id, price: priceOf(it.price, floor, false, rng), sold: false }));
@@ -114,7 +124,10 @@ export function rollShop(floor: number, rng: Random): ShopStock {
     if (eq) entries.push({ kind: 'equipment', id: eq.id, price: priceOf(eq.price, floor, false, rng), sold: false });
   } else {
     // ---- 闇商人：強力カード3 / 装備3 / アイテム2 ----
-    rng.sample(CARDS.filter((c) => c.pools.includes('dark')), 3).forEach((c) => entries.push({ kind: 'card', id: c.id, price: priceOf(c.price, floor, true, rng), sold: false }));
+    rollCardChoices(rng, 3, Math.max(floor, 20), 'dark').forEach((id) => {
+      const c = CARDS.find((x) => x.id === id)!;
+      entries.push({ kind: 'card', id: c.id, price: priceOf(c.price, floor, true, rng), sold: false });
+    });
     rng.sample(EQUIPMENT.filter((e) => e.pools.includes('dark')), 3).forEach((e) => entries.push({ kind: 'equipment', id: e.id, price: priceOf(e.price, floor, true, rng), sold: false }));
     rng.sample(ITEMS.filter((i) => i.pools.includes('dark')), 2).forEach((it) => entries.push({ kind: 'item', id: it.id, price: priceOf(it.price, floor, true, rng), sold: false }));
   }
@@ -136,14 +149,14 @@ export interface TreasureLoot {
   cards: string[];
 }
 
-export function rollTreasure(chest: TreasureChestDef, rng: Random): TreasureLoot {
+export function rollTreasure(chest: TreasureChestDef, rng: Random, floor = 1): TreasureLoot {
   const loot: TreasureLoot = { gold: 0, items: [], equipment: [], cards: [] };
   for (const c of chest.contents) {
     switch (c.kind) {
       case 'gold': loot.gold += rng.int(c.min, c.max); break;
       case 'randomItem': for (let i = 0; i < c.count; i++) { const it = randomItem(rng, 'treasure'); if (it) loot.items.push(it.id); } break;
       case 'randomEquipment': { const e = randomEquipment(rng, 'treasure', c.slot, c.minRarity); if (e) loot.equipment.push(e.id); break; }
-      case 'randomCard': loot.cards.push(rng.pick(rewardCardPool()).id); break;
+      case 'randomCard': loot.cards.push(rollCardChoices(rng, 1, floor)[0]); break;
       case 'stat': break;
     }
   }

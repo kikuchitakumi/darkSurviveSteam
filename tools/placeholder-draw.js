@@ -2004,7 +2004,7 @@
     rare: { metal: 'gold', gem: 215 },
     legendary: { metal: 'gold', gem: 'prism' },
   };
-  const TYPE_HUE = { attack: 0, defense: 215, buff: 38, debuff: 275, special: 150 };
+  const TYPE_HUE = { attack: 0, defense: 215, buff: 38, debuff: 275, special: 150, support: 42, sword: 355, magic: 255, blood: 345, curse: 125 };
 
   /**
    * カード枠（2倍解像度 440x616 / 表示は 220x308）

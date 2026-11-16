@@ -23,7 +23,7 @@ import { getEnemy } from '@/data/enemies';
 import { getItem } from '@/data/items';
 import { Random } from '@/core/Random';
 import type { DeckCard, GameState } from './GameState';
-import type { CardDef, Effect, EnemyActionDef, EnemyDef, IntentType, StatusId } from './types';
+import type { CardDef, Effect, EnemyActionDef, EnemyDef, IntentType, StatusId, ValueFormula, ValueSource } from './types';
 
 // -------------------------------------------------------------
 // 型定義
@@ -62,11 +62,12 @@ export type CombatEvent =
   | { t: 'itemUsed'; itemId: string; target: number | null }
   | { t: 'ap'; value: number; max: number }
   | { t: 'attack'; source: Ref; target: Ref }
-  | { t: 'damage'; target: Ref; amount: number; blocked: number; hpAfter: number; blockAfter: number; crit: boolean; evaded: boolean; kind: 'attack' | 'poison' | 'thorns' | 'item' }
+  | { t: 'damage'; target: Ref; amount: number; blocked: number; hpAfter: number; blockAfter: number; crit: boolean; evaded: boolean; kind: DamageKind }
   | { t: 'block'; target: Ref; amount: number; blockAfter: number }
   | { t: 'heal'; target: Ref; amount: number; hpAfter: number }
   | { t: 'status'; target: Ref; status: StatusId; delta: number; total: number }
   | { t: 'resist'; target: Ref }
+  | { t: 'cost'; uid: string; cost: number }
   | { t: 'enemyAction'; index: number; name: string; intent: IntentType }
   | { t: 'stunned'; index: number }
   | { t: 'death'; target: Ref }
@@ -75,11 +76,16 @@ export type CombatEvent =
   | { t: 'victory' }
   | { t: 'defeat' };
 
-/** プレイヤーに選択を求めている状態（手札から廃棄するカードを選ぶ等） */
+/** ダメージの種類（演出の出し分けに使う） */
+export type DamageKind = 'attack' | 'poison' | 'curse' | 'thorns' | 'item' | 'self';
+
+/** プレイヤーに選択を求めている状態（手札から廃棄するカード・コストを下げるカードを選ぶ） */
 export interface PendingChoice {
-  kind: 'exhaustFromHand';
+  kind: 'exhaustFromHand' | 'reduceCost';
   count: number;
   candidates: string[];
+  /** reduceCost の時：下げる量 */
+  amount?: number;
 }
 
 /** 敵の意図の表示用情報 */
@@ -108,6 +114,20 @@ export class Combat {
   turn = 0;
   phase: 'player' | 'enemy' | 'won' | 'lost' = 'player';
   pending: PendingChoice | null = null;
+
+  // ---- カードの効果で参照する「戦闘中の記録」 ----
+  /** このターンに使ったカードの枚数（憤怒） */
+  cardsPlayedTurn = 0;
+  /** 前のプレイヤーターン終了から受けたダメージ（報復） */
+  damageTakenTurn = 0;
+  /** この戦闘中に減った HP の合計（死屍累々） */
+  hpLostBattle = 0;
+  /** この戦闘中だけ増えた最大AP（誇り） */
+  maxApBonus = 0;
+  /** X コストのカードを使った時の X（残りAP） */
+  currentX = 0;
+  /** この戦闘中のコスト軽減（選択）：カードの uid → 下げる量 */
+  costMods = new Map<string, number>();
 
   private events: CombatEvent[] = [];
   /** 選択待ちで中断した効果の続き */
@@ -152,7 +172,7 @@ export class Combat {
   start(): void {
     const deck = this.gs.data.deck.map((c) => ({ ...c }));
     this.drawPile = this.rng.shuffle(deck);
-    this.player.maxAp = this.gs.maxAp;
+    this.player.maxAp = this.gs.maxAp + this.maxApBonus;
     // 装備品による戦闘開始時の状態
     for (const s of this.gs.battleStartStatuses) this.addStatus({ side: 'player' }, s.status, s.amount);
     for (const e of this.enemies) for (const s of e.def.startStatus ?? []) this.addStatus({ side: 'enemy', index: e.index }, s.status, s.amount);
@@ -181,8 +201,20 @@ export class Combat {
     if (this.pending) return { ok: false, reason: 'pending' };
     const c = this.hand.find((h) => h.uid === uid);
     if (!c) return { ok: false, reason: 'phase' };
-    if (getCard(c.cardId).cost > this.player.ap) return { ok: false, reason: 'ap' };
+    if (this.costOf(uid) > this.player.ap) return { ok: false, reason: 'ap' };
     return { ok: true };
+  }
+
+  /**
+   * 手札のカードの実際のコスト（「選択」による軽減を反映）。
+   * X コストは 0 扱い（残りAPを全て使う）。
+   */
+  costOf(uid: string): number {
+    const c = this.hand.find((h) => h.uid === uid) ?? this.drawPile.concat(this.discardPile).find((h) => h.uid === uid);
+    if (!c) return 0;
+    const def = getCard(c.cardId);
+    if (def.cost === 'X') return 0;
+    return Math.max(0, def.cost - (this.costMods.get(uid) ?? 0));
   }
 
   /**
@@ -197,9 +229,17 @@ export class Combat {
     if (def.target === 'enemy') {
       if (target === null || !this.enemies[target] || this.enemies[target].dead) return 'invalid';
     }
-    this.player.ap -= def.cost;
+    if (def.cost === 'X') {
+      // X コスト：残りAPを全て使い、その数を X とする
+      this.currentX = this.player.ap;
+      this.player.ap = 0;
+    } else {
+      this.currentX = 0;
+      this.player.ap -= this.costOf(uid);
+    }
     this.emit({ t: 'ap', value: this.player.ap, max: this.player.maxAp });
     this.hand = this.hand.filter((h) => h.uid !== uid);
+    this.cardsPlayedTurn++;
     this.emit({ t: 'cardPlayed', uid, cardId: def.id, target });
     this.gs.data.stats.cardsPlayed++;
     return this.runCardEffects(card, def, def.effects, target);
@@ -209,7 +249,11 @@ export class Combat {
   resolveChoice(uids: string[]): void {
     if (!this.pending || !this.resume) return;
     const picked = uids.filter((u) => this.pending!.candidates.includes(u)).slice(0, this.pending.count);
-    for (const u of picked) this.exhaustFromHand(u);
+    if (this.pending.kind === 'reduceCost') {
+      for (const u of picked) this.reduceCost(u, this.pending.amount ?? 1);
+    } else {
+      for (const u of picked) this.exhaustFromHand(u);
+    }
     this.pending = null;
     const r = this.resume;
     this.resume = null;
@@ -243,6 +287,8 @@ export class Combat {
     if (uids.length) this.emit({ t: 'discardHand', uids });
     this.endOfTurnStatuses({ side: 'player' });
     if (this.checkEnd()) return;
+    // 「このターン受けたダメージ（報復）」は、ここから次のプレイヤーターン中までを数える
+    this.damageTakenTurn = 0;
 
     // --- 敵のターン ---
     this.phase = 'enemy';
@@ -254,6 +300,12 @@ export class Combat {
       this.enemyAct(e);
       if (this.checkEnd()) return;
     }
+    // 敵ターンの終了時：呪いの数だけダメージ（シールド無視・呪いは減らない）
+    for (const e of this.enemies) {
+      const curse = e.statuses.curse ?? 0;
+      if (!e.dead && curse > 0) this.dealDamage({ side: 'enemy', index: e.index }, curse, false, 'curse');
+    }
+    if (this.checkEnd()) return;
     for (const e of this.enemies) if (!e.dead) this.endOfTurnStatuses({ side: 'enemy', index: e.index });
     if (this.checkEnd()) return;
 
@@ -265,33 +317,59 @@ export class Combat {
   // 数値計算（View のプレビュー表示にも使う）
   // =========================================================
 
-  /** プレイヤーの攻撃1回あたりのダメージ（クリティカル前） */
-  calcPlayerDamage(amount: number, scale: 'atk' | 'mag' | 'none' | undefined, targetIndex: number | null): number {
-    const st = this.gs.stats;
+  /** 攻撃力（奮起中は2倍） */
+  get effectiveAtk(): number {
+    return this.gs.stats.atk * ((this.player.statuses.atkDouble ?? 0) > 0 ? 2 : 1);
+  }
+
+  /** 計算式の「もと」の値 */
+  sourceValue(src: ValueSource): number {
+    switch (src) {
+      case 'atk': return this.effectiveAtk;
+      case 'mag': return this.gs.stats.mag;
+      case 'def': return this.gs.stats.def;
+      case 'cardsPlayedTurn': return this.cardsPlayedTurn;
+      case 'damageTakenTurn': return this.damageTakenTurn;
+      case 'hpLostBattle': return this.hpLostBattle;
+      case 'turn': return this.turn;
+      default: return 0;
+    }
+  }
+
+  /**
+   * 計算式の値：amount + mult × (scale の値) × (xMult なら X)
+   * @param defaultScale scale 省略時の扱い（旧カード互換：ダメージ=攻撃力、シールド=防御力）
+   * @param x X の値（プレビュー時は現在のAPを渡す）
+   */
+  formulaValue(f: ValueFormula, defaultScale: ValueSource, x = this.currentX): number {
+    const scale = f.scale ?? defaultScale;
+    const mult = f.mult ?? 1;
+    return (f.amount ?? 0) + mult * this.sourceValue(scale) * (f.xMult ? x : 1);
+  }
+
+  /** プレイヤーの攻撃1回あたりのダメージ（クリティカル前）。筋力などの「ダメージ増加」はカードの攻撃全てに乗る */
+  calcPlayerDamage(f: ValueFormula, targetIndex: number | null, fromItem = false, x = this.currentX): number {
     const s = this.player.statuses;
-    let dmg = amount;
-    if (scale === 'atk' || scale === undefined) dmg += st.atk + (s.strength ?? 0) + (s.turnStrength ?? 0);
-    else if (scale === 'mag') dmg += st.mag;
+    let dmg = this.formulaValue(f, fromItem ? 'none' : 'atk', x);
+    if (!fromItem) dmg += (s.strength ?? 0) + (s.turnStrength ?? 0);
     if ((s.weak ?? 0) > 0) dmg *= BALANCE.WEAK_MULTIPLIER;
     const t = targetIndex !== null ? this.enemies[targetIndex] : null;
     if (t && (t.statuses.vulnerable ?? 0) > 0) dmg *= BALANCE.VULNERABLE_MULTIPLIER;
     return Math.max(0, Math.floor(dmg));
   }
 
-  /** プレイヤーが得るブロック量 */
-  calcPlayerBlock(amount: number, scale: 'def' | 'mag' | 'none' | undefined): number {
-    const st = this.gs.stats;
+  /** プレイヤーが得るシールド量 */
+  calcPlayerBlock(f: ValueFormula, fromItem = false, x = this.currentX): number {
     const s = this.player.statuses;
-    let b = amount;
-    if (scale === 'def' || scale === undefined) b += st.def + (s.dexterity ?? 0);
-    else if (scale === 'mag') b += st.mag;
+    let b = this.formulaValue(f, fromItem ? 'none' : 'def', x);
+    if (!fromItem) b += s.dexterity ?? 0;
     if ((s.frail ?? 0) > 0) b *= BALANCE.FRAIL_MULTIPLIER;
     return Math.max(0, Math.floor(b));
   }
 
   /** 回復量 */
-  calcHeal(amount: number, scale: 'mag' | 'none' | undefined): number {
-    return Math.floor(amount + (scale === 'mag' ? this.gs.stats.mag : 0));
+  calcHeal(f: ValueFormula, x = this.currentX): number {
+    return Math.max(0, Math.floor(this.formulaValue(f, 'none', x)));
   }
 
   /** 敵の攻撃1回あたりのダメージ（プレイヤーの脆弱も考慮） */
@@ -316,15 +394,22 @@ export class Combat {
     };
   }
 
-  /** カード説明文の {damage} 等に入れる数値 */
+  /**
+   * カード説明文の {damage} {hits} {block} {heal} {curse} {self} {x} に入れる数値。
+   * X コストのカードは「今のAP」を X として計算する。
+   */
   cardNumbers(def: CardDef, targetIndex: number | null = null): Record<string, number> {
     const out: Record<string, number> = {};
+    const x = def.cost === 'X' ? this.player.ap : 0;
+    out.x = x;
     for (const eff of def.effects) {
       if (eff.kind === 'damage' && out.damage === undefined) {
-        out.damage = this.calcPlayerDamage(eff.amount, eff.scale, eff.target === 'all' ? null : targetIndex);
-        out.hits = eff.hits ?? 1;
-      } else if (eff.kind === 'block' && out.block === undefined) out.block = this.calcPlayerBlock(eff.amount, eff.scale);
-      else if (eff.kind === 'heal' && out.heal === undefined) out.heal = this.calcHeal(eff.amount, eff.scale);
+        out.damage = this.calcPlayerDamage(eff, eff.target === 'all' ? null : targetIndex, false, x);
+        out.hits = eff.hits === 'X' ? x : eff.hits ?? 1;
+      } else if (eff.kind === 'block' && out.block === undefined) out.block = this.calcPlayerBlock(eff, false, x);
+      else if (eff.kind === 'heal' && out.heal === undefined) out.heal = this.calcHeal(eff, x);
+      else if (eff.kind === 'selfDamage' && out.self === undefined) out.self = Math.floor(this.formulaValue(eff, 'none', x));
+      else if (eff.kind === 'status' && eff.status === 'curse' && out.curse === undefined) out.curse = Math.floor(this.formulaValue(eff, 'none', x));
     }
     return out;
   }
@@ -353,6 +438,17 @@ export class Combat {
         this.resume = { card, def, rest: effects.slice(i + 1), target };
         return 'needChoice';
       }
+      if (eff.kind === 'reduceCostChoice') {
+        const candidates = this.hand.filter((h) => getCard(h.cardId).cost !== 'X').map((h) => h.uid);
+        if (candidates.length === 0) continue;
+        if (candidates.length === 1) {
+          this.reduceCost(candidates[0], eff.amount);
+          continue;
+        }
+        this.pending = { kind: 'reduceCost', count: 1, candidates, amount: eff.amount };
+        this.resume = { card, def, rest: effects.slice(i + 1), target };
+        return 'needChoice';
+      }
       this.applyEffect(eff, target, false);
       if (this.checkEnd()) break;
     }
@@ -368,6 +464,12 @@ export class Combat {
     return 'done';
   }
 
+  /** この戦闘中、カードのコストを下げる（選択） */
+  private reduceCost(uid: string, amount: number): void {
+    this.costMods.set(uid, (this.costMods.get(uid) ?? 0) + amount);
+    this.emit({ t: 'cost', uid, cost: this.costOf(uid) });
+  }
+
   private exhaustFromHand(uid: string): void {
     const c = this.hand.find((h) => h.uid === uid);
     if (!c) return;
@@ -381,12 +483,12 @@ export class Combat {
     switch (eff.kind) {
       case 'damage': {
         const targets = this.resolveTargets(eff.target ?? 'target', target);
-        const hits = eff.hits ?? 1;
+        const hits = eff.hits === 'X' ? this.currentX : eff.hits ?? 1;
         for (let h = 0; h < hits; h++) {
           for (const ti of targets) {
             const en = this.enemies[ti];
             if (!en || en.dead) continue;
-            let dmg = this.calcPlayerDamage(eff.amount, fromItem ? 'none' : eff.scale, ti);
+            let dmg = this.calcPlayerDamage(eff, ti, fromItem);
             let crit = false;
             // クリティカル判定（カードのみ。運/99×50%、威力3倍）
             if (!fromItem && this.rng.chance(this.gs.critRate)) {
@@ -402,16 +504,35 @@ export class Combat {
         break;
       }
       case 'block': {
-        const b = fromItem ? eff.amount : this.calcPlayerBlock(eff.amount, eff.scale);
-        this.gainBlock({ side: 'player' }, b);
+        this.gainBlock({ side: 'player' }, this.calcPlayerBlock(eff, fromItem));
         break;
       }
       case 'status': {
         const t = eff.target ?? 'target';
-        if (t === 'self') this.addStatus({ side: 'player' }, eff.status, eff.amount);
-        else for (const ti of this.resolveTargets(t === 'all' ? 'all' : 'target', target)) this.addStatus({ side: 'enemy', index: ti }, eff.status, eff.amount);
+        const amount = Math.floor(this.formulaValue(eff, 'none'));
+        if (amount === 0) break;
+        if (t === 'self') this.addStatus({ side: 'player' }, eff.status, amount);
+        else for (const ti of this.resolveTargets(t === 'all' ? 'all' : 'target', target)) this.addStatus({ side: 'enemy', index: ti }, eff.status, amount);
         break;
       }
+      case 'selfDamage':
+        this.dealDamage({ side: 'player' }, Math.floor(this.formulaValue(eff, 'none')), false, 'self');
+        break;
+      case 'breakBlock': {
+        for (const ti of this.resolveTargets(eff.target ?? 'target', target)) {
+          const en = this.enemies[ti];
+          if (!en || en.dead || en.block <= 0) continue;
+          en.block = Math.floor(en.block * (1 - eff.percent / 100));
+          this.emit({ t: 'block', target: { side: 'enemy', index: ti }, amount: 0, blockAfter: en.block });
+        }
+        break;
+      }
+      case 'maxAp':
+        this.maxApBonus += eff.amount;
+        this.player.maxAp += eff.amount;
+        this.player.ap += eff.amount;
+        this.emit({ t: 'ap', value: this.player.ap, max: this.player.maxAp });
+        break;
       case 'stun': {
         for (const ti of this.resolveTargets(eff.target ?? 'target', target)) this.addStatus({ side: 'enemy', index: ti }, 'stun', 1);
         break;
@@ -424,12 +545,13 @@ export class Combat {
         this.emit({ t: 'ap', value: this.player.ap, max: this.player.maxAp });
         break;
       case 'heal':
-        this.healTarget({ side: 'player' }, this.calcHeal(eff.amount, eff.scale));
+        this.healTarget({ side: 'player' }, this.calcHeal(eff));
         break;
       case 'healPercent':
         this.healTarget({ side: 'player' }, Math.ceil((this.gs.maxHp * eff.percent) / 100));
         break;
       case 'exhaustChoice':
+      case 'reduceCostChoice':
         break; // runCardEffects で処理
     }
   }
@@ -466,7 +588,7 @@ export class Combat {
    * ダメージを与える。ブロックで先に受け止め、残りが HP から引かれる。
    * kind = 'poison' の場合はブロックを無視する。
    */
-  private dealDamage(target: Ref, amount: number, crit: boolean, kind: 'attack' | 'poison' | 'thorns' | 'item', source?: Ref): void {
+  private dealDamage(target: Ref, amount: number, crit: boolean, kind: DamageKind, source?: Ref): void {
     if (target.side === 'enemy' && this.enemies[target.index].dead) return;
     // プレイヤーへの攻撃は運で回避できる（最大50%）
     if (target.side === 'player' && kind === 'attack' && this.rng.chance(this.gs.evadeRate)) {
@@ -475,14 +597,21 @@ export class Combat {
     }
     let blocked = 0;
     let rest = amount;
-    if (kind !== 'poison') {
+    // 毒・呪い・自傷はシールドを無視する
+    if (kind !== 'poison' && kind !== 'curse' && kind !== 'self') {
       const blk = this.getBlock(target);
       blocked = Math.min(blk, rest);
       rest -= blocked;
       this.setBlock(target, blk - blocked);
     }
-    this.setHp(target, this.getHp(target) - rest);
+    const before = this.getHp(target);
+    this.setHp(target, before - rest);
     this.emit({ t: 'damage', target, amount: rest, blocked, hpAfter: this.getHp(target), blockAfter: this.getBlock(target), crit, evaded: false, kind });
+    if (target.side === 'player') {
+      const lost = before - this.getHp(target);
+      this.hpLostBattle += lost;
+      this.damageTakenTurn += lost;
+    }
 
     if (target.side === 'enemy' && kind !== 'thorns') {
       this.gs.data.stats.damageDealt += rest;
@@ -550,10 +679,11 @@ export class Combat {
       this.healTarget(r, s.regen!);
       this.decStatus(r, 'regen');
     }
-    if (s.turnStrength) {
-      const v = s.turnStrength;
-      delete s.turnStrength;
-      this.emit({ t: 'status', target: r, status: 'turnStrength', delta: -v, total: 0 });
+    for (const k of ['turnStrength', 'atkDouble'] as StatusId[]) {
+      const v = s[k];
+      if (!v) continue;
+      delete s[k];
+      this.emit({ t: 'status', target: r, status: k, delta: -v, total: 0 });
     }
     for (const k of ['weak', 'vulnerable', 'frail', 'stunResist'] as StatusId[]) if ((s[k] ?? 0) > 0) this.decStatus(r, k);
   }
@@ -607,8 +737,20 @@ export class Combat {
       this.player.block = 0;
       this.emit({ t: 'block', target: { side: 'player' }, amount: 0, blockAfter: 0 });
     }
+    this.cardsPlayedTurn = 0;
+    const st = this.player.statuses;
     this.tickPoison({ side: 'player' });
+    // 血の代償：毎ターン自分にダメージ
+    if ((st.bloodPrice ?? 0) > 0) this.dealDamage({ side: 'player' }, st.bloodPrice!, false, 'self');
     if (this.checkEnd()) return;
+    // 奮起：予約していた「攻撃力2倍」をこのターンに適用
+    if ((st.atkDoubleNext ?? 0) > 0) {
+      delete st.atkDoubleNext;
+      this.emit({ t: 'status', target: { side: 'player' }, status: 'atkDoubleNext', delta: -1, total: 0 });
+      this.addStatus({ side: 'player' }, 'atkDouble', 1);
+    }
+    // 不屈の守勢：毎ターン 防御力×N のシールド
+    if ((st.fortify ?? 0) > 0) this.gainBlock({ side: 'player' }, this.calcPlayerBlock({ amount: 0, scale: 'def', mult: st.fortify! }));
     this.player.ap = this.player.maxAp;
     this.emit({ t: 'ap', value: this.player.ap, max: this.player.maxAp });
     this.drawCards(BALANCE.HAND_DRAW);
@@ -662,7 +804,10 @@ export class Combat {
           for (let h = 0; h < hits; h++) {
             if (e.dead || this.gs.data.hp <= 0) break;
             this.emit({ t: 'attack', source: ref, target: { side: 'player' } });
-            this.dealDamage({ side: 'player' }, this.calcEnemyDamage(e, eff.amount), false, 'attack', ref);
+            const dmg = this.calcEnemyDamage(e, eff.amount);
+            this.dealDamage({ side: 'player' }, dmg, false, 'attack', ref);
+            // しっぺ返し：攻撃した敵は、その攻撃力と同じダメージを受ける
+            if ((this.player.statuses.retribution ?? 0) > 0 && !e.dead && dmg > 0) this.dealDamage(ref, dmg, false, 'thorns');
           }
           break;
         }

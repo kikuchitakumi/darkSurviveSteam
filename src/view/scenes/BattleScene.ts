@@ -31,7 +31,7 @@ import type { Combat, CombatEvent, EnemyInstance, PendingChoice, Ref, StatusMap 
 import type { StatusId } from '@/model/types';
 import { animate, button, clear, h, img, wait } from '../dom';
 import { ui } from '../ui';
-import { createCardEl, updateCardNumbers } from '../components/CardView';
+import { createCardEl, updateCardCost, updateCardNumbers } from '../components/CardView';
 import { attachTooltip } from '../components/Tooltip';
 import { isModalOpen } from '../components/Modal';
 import { enemyDesc, enemyName, itemName, statusDesc, statusName } from '../text';
@@ -384,7 +384,9 @@ export class BattleScene {
       const el = this.cardEls.get(c.uid);
       if (!el) continue;
       const def = getCard(c.cardId);
-      const ok = this.combat.phase === 'player' && def.cost <= this.combat.player.ap;
+      const cost = this.combat.costOf(c.uid);
+      const ok = this.combat.phase === 'player' && cost <= this.combat.player.ap;
+      if (def.cost !== 'X') updateCardCost(el, cost, cost < def.cost);
       el.classList.toggle('playable', ok);
       el.classList.toggle('unplayable', !ok);
       updateCardNumbers(el, def, this.combat.cardNumbers(def, null));
@@ -608,7 +610,7 @@ export class BattleScene {
     return new Promise((resolve) => {
       this.choosing = { count: p.count, picked: new Set(), candidates: p.candidates, resolve };
       this.root.classList.add('is-choosing');
-      this.hintEl.textContent = t('battle.selectExhaust', { n: p.count });
+      this.hintEl.textContent = p.kind === 'reduceCost' ? t('battle.selectReduceCost') : t('battle.selectExhaust', { n: p.count });
       this.hintEl.classList.add('visible');
       this.layoutHand();
     });
@@ -841,7 +843,17 @@ export class BattleScene {
           s.hp = ev.hpAfter;
           s.block = ev.blockAfter;
         }
-        if (ev.kind === 'poison') {
+        if (ev.kind === 'curse') {
+          Audio.play('se_debuff');
+          ui.particles.burst(p.x, p.y, 'debuff', 1.2);
+          fx.popNumber(p.x, p.y, String(ev.amount), 'curse');
+          fx.floatText(p.x, p.y - 90, statusName('curse'), 'float-debuff');
+        } else if (ev.kind === 'self') {
+          Audio.play('se_player_hurt', { volume: 0.7 });
+          ui.stage.hurtFlash(0.5);
+          ui.particles.burst(p.x, p.y, 'blood', 0.8);
+          fx.popNumber(p.x, p.y - 40, String(ev.amount), 'damage');
+        } else if (ev.kind === 'poison') {
           Audio.play('se_debuff');
           ui.particles.burst(p.x, p.y, 'debuff', 0.8);
           fx.popNumber(p.x, p.y, String(ev.amount), 'poison');
@@ -1001,6 +1013,17 @@ export class BattleScene {
           if (v.intent.classList.contains('visible')) animate(v.intent, [{ opacity: 0, transform: 'translate(-50%, 10px) scale(0.6)' }, { opacity: 1, transform: 'translate(-50%,0) scale(1)' }], { duration: 300, delay: i * 60, fill: 'backwards' });
         });
         break;
+
+      case 'cost': {
+        const el = this.cardEls.get(ev.uid);
+        if (el) {
+          const def = getCard(this.cardIdOf(ev.uid));
+          updateCardCost(el, ev.cost, def.cost !== 'X' && ev.cost < def.cost);
+          animate(el.querySelector('.card-cost')!, [{ transform: 'scale(1.6)', filter: 'brightness(2)' }, { transform: 'scale(1)', filter: 'brightness(1)' }], 400);
+          Audio.play('se_buff');
+        }
+        break;
+      }
 
       case 'victory':
       case 'defeat':

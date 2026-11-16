@@ -42,8 +42,11 @@ interface Spec {
 
 // ---- 絵文字の割り当て（仮画像のシンボル） ----
 const CARD_SYMBOL: Record<string, string> = {
-  strike: '🗡️', defend: '🛡️', seal: '📜', rage: '💢', scavenge: '♻️', executioner: '🪓', flurry: '⚔️', shotgun: '💥',
-  hellfire: '🔥', iron_wall: '🧱', toxic_mist: '☣️', terror: '👁️', adrenaline: '💉', blood_pact: '🩸', first_aid: '🩹',
+  block: '🛡️', iron_wall: '🧱', steadfast: '🏰', rally: '📯', rest: '🛌', prayer: '🙏', inspiration: '💡', blessing: '✨', dark_blessing: '🌑',
+  retaliate: '🔁', pride: '👑', scheme: '🕸️', trickery: '🎭', blood_price: '🩸', tit_for_tat: '⚖️', selection: '🃏',
+  stone_throw: '🪨', fury: '💢', issen: '🗡️', bone_breaker: '🦴', triple_slash: '⚔️', lethal_blow: '💀', lion_dance: '🦁', armor_break: '🔨',
+  black_flame: '🔥', inferno: '🌋', flame_vortex: '🌪️', underworld_flame: '☄️', ashes: '🌫️', will_o_wisp: '👻',
+  blood_flash: '🩸', crimson_slash: '🗡️', corpse_pile: '⚰️', curse_flame: '🕯️', death_curse: '☠️', grudge: '👁️',
 };
 const ITEM_SYMBOL: Record<string, string> = {
   potion: '🧪', stimulant: '💉', molotov: '🍾', handgun_ammo: '🔫', smoke: '💨', poison_vial: '☠️', steroid: '💪',
@@ -57,6 +60,7 @@ const EQUIP_SYMBOL: Record<string, string> = {
 const STATUS_SYMBOL: Record<string, string> = {
   strength: '💪', turnStrength: '💢', dexterity: '🌀', weak: '🥀', vulnerable: '💔', frail: '🦴', poison: '☠️',
   stun: '🔒', stunResist: '🔐', regen: '💚', thorns: '🌵',
+  curse: '☠️', fortify: '🏰', atkDoubleNext: '⏫', atkDouble: '💥', bloodPrice: '🩸', retribution: '🔁',
 };
 const ROUTE_SYMBOL: Record<string, string> = { battle: '⚔️', elite: '💀', event: '❓', shop: '🪙', boss: '👹', hidden: '🗝️' };
 const BG_THEME: Record<string, string> = {
@@ -116,12 +120,14 @@ function buildSpecs(): Spec[] {
   });
 
   // ---- カード ----
-  CARDS.forEach((c) => list.push(spec(c.image, 'cardArt', 480, 450, `カード絵：${c.name}`, { variant: c.type, symbol: CARD_SYMBOL[c.id] ?? '🃏' })));
+  CARDS.forEach((c) => list.push(spec(c.image, 'cardArt', 480, 450, `カード絵：${c.name}`, { variant: c.element ?? c.type, symbol: CARD_SYMBOL[c.id] ?? '🃏' })));
   for (const [rarity, p] of Object.entries(IMAGES.cardFrame)) list.push(spec(p, 'cardFrame', 440, 616, `カード枠(${rarity})`, { variant: rarity }));
   list.push(spec(IMAGES.cardBack, 'cardBack', 440, 616, 'カード裏面'));
   list.push(spec(IMAGES.cardCostGem, 'costGem', 128, 128, 'カードのコスト宝石'));
-  const typeIcon: Record<string, [string, number]> = { attack: ['⚔️', 0], defense: ['🛡️', 215], buff: ['🔺', 38], debuff: ['🌀', 275], special: ['✴️', 150] };
+  const typeIcon: Record<string, [string, number]> = { attack: ['⚔️', 0], defense: ['🛡️', 215], support: ['✨', 40], buff: ['🔺', 38], debuff: ['🌀', 275], special: ['✴️', 150] };
   for (const [type, p] of Object.entries(IMAGES.cardType)) list.push(spec(p, 'medallionIcon', 96, 96, `カード種別：${type}`, { symbol: typeIcon[type][0], hue: typeIcon[type][1], sat: 70 }));
+  const elementIcon: Record<string, [string, number]> = { sword: ['🗡️', 355], magic: ['🔮', 255], blood: ['🩸', 350], curse: ['☠️', 130] };
+  for (const [el, p] of Object.entries(IMAGES.cardElement)) list.push(spec(p, 'medallionIcon', 96, 96, `攻撃の系統：${el}`, { symbol: elementIcon[el][0], hue: elementIcon[el][1], sat: 70 }));
 
   // ---- アイテム・鍵・装備（元の色を活かしたメダリオン） ----
   ITEMS.forEach((i) => list.push(spec(i.image, 'itemIcon', 160, 160, `アイテム：${i.name}`, { symbol: ITEM_SYMBOL[i.id] ?? '🧪', rim: i.rarity === 'legendary' ? 'gold' : i.rarity === 'rare' ? 'silver' : 'bronze', hue: 25 })));

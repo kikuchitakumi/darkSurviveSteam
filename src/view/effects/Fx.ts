@@ -36,7 +36,7 @@ export class Fx {
    * ダメージなどの数字を浮かび上がらせる
    * @param kind damage / crit / block / heal / miss / status / poison
    */
-  popNumber(x: number, y: number, text: string, kind: 'damage' | 'crit' | 'block' | 'heal' | 'miss' | 'status' | 'poison' | 'buff' | 'debuff' = 'damage'): void {
+  popNumber(x: number, y: number, text: string, kind: 'damage' | 'crit' | 'block' | 'heal' | 'miss' | 'status' | 'poison' | 'curse' | 'buff' | 'debuff' = 'damage'): void {
     const el = h(`div.pop-number.pop-${kind}`, { style: { left: `${x}px`, top: `${y}px` } }, text);
     this.stage.fxLayer.append(el);
     const dx = (Math.random() - 0.5) * 80;

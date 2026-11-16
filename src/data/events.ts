@@ -89,6 +89,23 @@ export const EVENTS: EventDef[] = [
   },
 ];
 
+/** イベントを追加・上書きする（開発メニュー / Firebase から） */
+export function upsertEvents(defs: EventDef[]): void {
+  for (const d of defs) {
+    const i = EVENTS.findIndex((e) => e.id === d.id);
+    if (i >= 0) EVENTS[i] = d;
+    else EVENTS.push(d);
+  }
+}
+
+/** イベントを取り除く */
+export function removeEvents(ids: string[]): void {
+  for (const id of ids) {
+    const i = EVENTS.findIndex((e) => e.id === id);
+    if (i >= 0) EVENTS.splice(i, 1);
+  }
+}
+
 export function getEvent(id: string): EventDef {
   const e = EVENTS.find((x) => x.id === id);
   if (!e) throw new Error(`Unknown event id: ${id}`);

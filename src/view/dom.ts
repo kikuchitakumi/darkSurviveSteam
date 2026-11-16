@@ -48,7 +48,21 @@ export function h<K extends keyof HTMLElementTagNameMap = 'div'>(sel: string, pr
 }
 
 /** assets/ 以下の画像パスを URL に変換 */
+/**
+ * 開発メニューでブラウザ内（IndexedDB）に保存した画像の「idb:～」→ 表示用URL の対応表。
+ * services/content.ts が起動時に登録する。
+ */
+export const localImageUrls = new Map<string, string>();
+
+/**
+ * 画像パスを表示用の URL に変換する。
+ *  - 'images/～'          … public/assets/ 以下のファイル
+ *  - 'https://～'          … Firebase Storage などの URL（そのまま）
+ *  - 'idb:～'              … ブラウザ内に保存した画像（ローカル保存モード）
+ */
 export function asset(path: string): string {
+  if (/^(https?:|data:|blob:)/.test(path)) return path;
+  if (path.startsWith('idb:')) return localImageUrls.get(path) ?? '';
   return `${GAME_CONFIG.ASSET_ROOT}/${path}`;
 }
 

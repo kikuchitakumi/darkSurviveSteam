@@ -18,13 +18,14 @@ import { Audio } from '@/core/AudioManager';
 import { Random } from '@/core/Random';
 import { Storage } from '@/core/Storage';
 import { BALANCE, zoneOfFloor } from '@/config/balance';
-import { STARTER_DECK, getCard } from '@/data/cards';
+import { getStarterDeck, getCard } from '@/data/cards';
 import { getEquipment } from '@/data/equipment';
 import { FIRST_FLOOR, ROUTE_VISUALS, getZone } from '@/data/floors';
 import { getItem } from '@/data/items';
 import { IMAGES, collectAllImagePaths } from '@/data/images';
 import { t } from '@/i18n';
 import { GameState } from '@/model/GameState';
+import { Content } from '@/services/content';
 import { rollStats } from '@/model/StatRoller';
 import { generateRoutes, isBossFloor } from '@/model/FloorGenerator';
 import { useItemOutOfBattle } from '@/model/Outcomes';
@@ -68,6 +69,8 @@ export class GameController {
   // 起動
   // =========================================================
   async boot(): Promise<void> {
+    // 開発メニュー・Firebase で登録したカード・敵・イベントを読み込む（失敗しても同梱データで続行）
+    await Content.loadAll();
     await this.preload();
     await waitFirstClick();
     this.restoreHudHandlers();
@@ -126,7 +129,7 @@ export class GameController {
     const seed = Random.randomSeed();
     const rng = new Random(seed ^ 0x5eed);
     const result = rollStats(rng);
-    this.gs = GameState.create(seed, result.stats, result.talents, result.rich, STARTER_DECK);
+    this.gs = GameState.create(seed, result.stats, result.talents, result.rich, getStarterDeck());
     this.gs.data.floor = Math.min(BALANCE.MAX_FLOOR, Math.max(1, Math.floor(floor)));
     this.isDebugRun = true;
   }
@@ -150,7 +153,7 @@ export class GameController {
       rerolls--;
       result = rollStats(rng);
     }
-    this.gs = GameState.create(seed, result.stats, result.talents, result.rich, STARTER_DECK);
+    this.gs = GameState.create(seed, result.stats, result.talents, result.rich, getStarterDeck());
     const meta = Storage.loadMeta();
     meta.totalRuns++;
     Storage.saveMeta(meta);

@@ -29,6 +29,13 @@
 .card.type-buff { --type-a: #d09a24; --type-b: #4a2e04; --type-light: #ffe2a0; }
 .card.type-debuff { --type-a: #8a4ad8; --type-b: #24083e; --type-light: #dcc0ff; }
 .card.type-special { --type-a: #2fa868; --type-b: #06301a; --type-light: #b0ffd0; }
+.card.type-support { --type-a: #c99626; --type-b: #3e2704; --type-light: #ffe2a0; }
+.card.element-sword { --type-a: #b8323a; --type-b: #3a060c; --type-light: #ffc0c0; }
+.card.element-magic { --type-a: #5a52e0; --type-b: #12083e; --type-light: #c8c0ff; }
+.card.element-blood { --type-a: #8e0a1a; --type-b: #2a0004; --type-light: #ff8a90; }
+.card.element-curse { --type-a: #3e8a52; --type-b: #0a1e0e; --type-light: #c0ffb0; }
+/* 「選択」でコストが下がったカード */
+.card.cost-down .card-cost span { color: #8dff9b; text-shadow: 0 0 3px #000, 0 2px 2px #000, 0 0 12px rgba(80, 255, 120, 0.95); }
 
 .card-tilt {
   position: absolute;

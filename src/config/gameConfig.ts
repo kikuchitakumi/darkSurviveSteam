@@ -27,6 +27,9 @@ export const GAME_CONFIG = {
   /** 画像・音声のルートパス（public/ 配下）。相対パスなので Pages / Electron 両対応 */
   ASSET_ROOT: './assets',
 
+  /** 手元のPC（npm run dev）で動かしているか。開発メニューの表示に使う */
+  DEV_HOST: typeof location !== 'undefined' && ['localhost', '127.0.0.1'].includes(location.hostname),
+
   /** デバッグ機能（URL に ?debug=1 を付けると有効化） */
   DEBUG: typeof location !== 'undefined' && new URLSearchParams(location.search).has('debug'),
 } as const;

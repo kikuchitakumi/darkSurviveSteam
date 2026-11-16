@@ -29,7 +29,9 @@ export function renderDescription(def: CardDef, numbers?: Record<string, number>
   const base = baseNumbers(def);
   const nums = numbers ?? base;
   const text = cardDesc(def);
-  const outer = h(`div.card-desc${text.replace(/\{\w+\}/g, '00').length > 30 ? '.long' : ''}`);
+  // 1行あたり約13文字として行数を見積もり、3行以上なら小さめの文字にする
+  const lines = text.replace(/\{\w+\}/g, '00').split('\n').reduce((n, seg) => n + Math.max(1, Math.ceil(seg.length / 13)), 0);
+  const outer = h(`div.card-desc${lines >= 3 ? '.long' : ''}`);
   const el = h('span.card-desc-inner');
   outer.append(el);
   const parts = text.split(/(\{\w+\})/g);
@@ -54,16 +56,22 @@ export function renderDescription(def: CardDef, numbers?: Record<string, number>
 function baseNumbers(def: CardDef): Record<string, number> {
   const out: Record<string, number> = {};
   for (const e of def.effects) {
-    if (e.kind === 'damage' && out.damage === undefined) { out.damage = e.amount; out.hits = e.hits ?? 1; }
+    if (e.kind === 'damage' && out.damage === undefined) { out.damage = e.amount; out.hits = typeof e.hits === 'number' ? e.hits : 1; }
     if (e.kind === 'block' && out.block === undefined) out.block = e.amount;
     if (e.kind === 'heal' && out.heal === undefined) out.heal = e.amount;
   }
   return out;
 }
 
+/** 「攻撃・剣」「サポート」「防御 ・ 廃棄」のような種類の表示 */
+export function cardTypeLabel(def: CardDef): string {
+  const base = t(`cardType.${def.type}` as any) + (def.element ? `・${t(`cardElement.${def.element}` as any)}` : '');
+  return base + (def.exhaust ? ` ／ ${t('card.exhaust')}` : '');
+}
+
 /** カード要素を作る */
 export function createCardEl(def: CardDef, opts: { numbers?: Record<string, number>; uid?: string; small?: boolean; tilt?: boolean } = {}): HTMLElement {
-  const typeLabel = t(`cardType.${def.type}` as any) + (def.exhaust ? ` ・ ${t('card.exhaust')}` : '');
+  const typeLabel = cardTypeLabel(def);
   const tiltEl = h('div.card-tilt', {}, [
     h('div.card-art', {}, img(def.image)),
     h('div.card-art-shade'),
@@ -71,12 +79,12 @@ export function createCardEl(def: CardDef, opts: { numbers?: Record<string, numb
     h('div.card-ribbon', {}, h('div.card-name', {}, cardName(def))),
     h('div.card-type', {}, typeLabel),
     renderDescription(def, opts.numbers),
-    h('div.card-type-emblem', {}, img(IMAGES.cardType[def.type])),
+    h('div.card-type-emblem', {}, img(def.element ? IMAGES.cardElement[def.element] : IMAGES.cardType[def.type])),
     h('div.card-cost', { style: { backgroundImage: `url("${asset(IMAGES.cardCostGem)}")` } }, h('span', {}, String(def.cost))),
     h('div.card-foil'),
     h('div.card-glare'),
   ]);
-  const el = h(`div.card.type-${def.type}.rarity-${def.rarity}${opts.small ? '.card-small' : ''}`, { dataset: { cardId: def.id, uid: opts.uid ?? '' } }, [tiltEl]);
+  const el = h(`div.card.type-${def.type}.rarity-${def.rarity}${def.element ? '.element-' + def.element : ''}${def.cost === 'X' ? '.cost-x' : ''}${opts.small ? '.card-small' : ''}`, { dataset: { cardId: def.id, uid: opts.uid ?? '' } }, [tiltEl]);
   if (opts.tilt !== false) enableTilt(el);
   return el;
 }
@@ -101,6 +109,13 @@ export function enableTilt(el: HTMLElement): void {
     el.style.setProperty('--ry', '0deg');
     el.classList.remove('is-tilting');
   });
+}
+
+/** 手札のカードのコスト表示を更新（「選択」で下がった時など） */
+export function updateCardCost(el: HTMLElement, cost: number, reduced: boolean): void {
+  const span = el.querySelector('.card-cost span');
+  if (span) span.textContent = String(cost);
+  el.classList.toggle('cost-down', reduced);
 }
 
 /** 手札のカードの数値だけを更新（筋力などが変わった時） */

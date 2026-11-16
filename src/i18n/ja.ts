@@ -53,6 +53,7 @@ export const ja = {
   'title.confirmNew': 'セーブデータがあります。\n新しく始めるとセーブデータは消えます。よろしいですか？',
   'title.pressStart': '— クリックして始める —',
   'title.debug': 'DEBUG',
+  'title.devMenu': '開発メニュー',
   'title.sourceUpdated': 'ソース更新: {date}',
   'debug.title': 'デバッグ：好きな階から開始',
   'debug.floor': '開始する階（1〜{max}）',
@@ -126,6 +127,7 @@ export const ja = {
   'battle.notEnoughAp': 'AP が足りない！',
   'battle.selectTarget': '対象を選んでください',
   'battle.selectExhaust': '廃棄するカードを {n} 枚選んでください',
+  'battle.selectReduceCost': 'コストを下げるカードを1枚選んでください',
   'battle.drawPile': '山札',
   'battle.discardPile': '捨て札',
   'battle.exhaustPile': '廃棄',
@@ -243,6 +245,11 @@ export const ja = {
 
   // ---- カード種別 ----
   'cardType.attack': '攻撃',
+  'cardType.support': 'サポート',
+  'cardElement.sword': '剣',
+  'cardElement.magic': '魔力',
+  'cardElement.blood': '血',
+  'cardElement.curse': '呪',
   'cardType.defense': '防御',
   'cardType.buff': 'バフ',
   'cardType.debuff': 'デバフ',

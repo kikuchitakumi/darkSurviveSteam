@@ -1,0 +1,27 @@
+// =============================================================
+// Firestore のセキュリティルール（DarkSurvive）
+// -------------------------------------------------------------
+// ・カード／敵／イベントのデータは誰でも読める（ゲームが起動時に読み込むため）
+// ・書き込めるのは「編集者」として登録したアカウントだけ
+//
+// ★下の EDITORS に、開発メニューで登録作業をする人の Google アカウントの
+//   メールアドレスを書いてから、Firebase コンソールの
+//   「Firestore Database → ルール」に貼り付けて「公開」してください。
+// =============================================================
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isEditor() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email in [
+          'editor1@example.com' // ← ここを自分のメールアドレスに変える（複数ならカンマ区切り）
+        ];
+    }
+
+    match /{kind}/{id} {
+      allow read: if kind in ['cards', 'enemies', 'events'];
+      allow write: if kind in ['cards', 'enemies', 'events'] && isEditor();
+    }
+  }
+}

@@ -14,11 +14,12 @@ import { openModal } from '../components/Modal';
 
 /** 種類 → コスト → 名前 の順に並べる */
 function sortDeck(cards: DeckCard[]): DeckCard[] {
-  const order = ['attack', 'defense', 'buff', 'debuff', 'special'];
+  const order = ['attack', 'defense', 'support', 'buff', 'debuff', 'special'];
+  const cost = (c: number | 'X') => (c === 'X' ? 99 : c);
   return cards.slice().sort((a, b) => {
     const da = getCard(a.cardId);
     const db = getCard(b.cardId);
-    return order.indexOf(da.type) - order.indexOf(db.type) || da.cost - db.cost || da.id.localeCompare(db.id);
+    return order.indexOf(da.type) - order.indexOf(db.type) || cost(da.cost) - cost(db.cost) || da.id.localeCompare(db.id);
   });
 }
 

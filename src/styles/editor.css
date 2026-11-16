@@ -1,0 +1,128 @@
+/* =============================================================
+   editor.css  【スタイル：開発メニュー（カード・敵・イベントの登録）】
+   -------------------------------------------------------------
+   ゲーム画面と同じ 1920x1080 の中に、作業しやすい落ち着いた見た目で表示する。
+   ============================================================= */
+.editor-root {
+  position: absolute;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(ellipse at 50% 0%, #1c1410, #070505 70%);
+  font-size: 18px;
+  color: var(--c-text);
+  user-select: text;
+}
+.editor-header { display: flex; align-items: center; gap: 20px; padding: 14px 24px; border-bottom: 1px solid rgba(224, 170, 69, 0.35); background: rgba(0, 0, 0, 0.5); }
+.editor-title { font-size: 30px; font-weight: 800; letter-spacing: 0.2em; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.editor-mode { padding: 4px 14px; border-radius: 14px; font-size: 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); }
+.editor-mode.mode-remote { border-color: #4fc07a; color: #b8ffd0; }
+.editor-mode.mode-local, .editor-mode.mode-remote-readonly { border-color: #c8a040; color: #ffe2a0; }
+.editor-header-btns { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+.editor-user { font-size: 15px; color: var(--c-text-dim); }
+.editor-tabs { display: flex; gap: 6px; padding: 10px 24px 0; }
+.editor-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 400px 1fr 500px; gap: 14px; padding: 12px 24px; }
+.editor-list, .editor-form, .editor-preview {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(16, 12, 10, 0.85);
+  border: 1px solid rgba(224, 170, 69, 0.25);
+}
+.editor-list::-webkit-scrollbar, .editor-form::-webkit-scrollbar, .editor-preview::-webkit-scrollbar { width: 10px; }
+.editor-list::-webkit-scrollbar-thumb, .editor-form::-webkit-scrollbar-thumb, .editor-preview::-webkit-scrollbar-thumb { background: #6a4a18; border-radius: 5px; }
+.editor-status { padding: 8px 24px 12px; font-size: 16px; white-space: pre-wrap; min-height: 40px; color: var(--c-text-dim); }
+.editor-status.ok { color: #9cffbc; }
+.editor-status.err { color: #ff9a8a; }
+
+/* 一覧 */
+.editor-list-top { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.editor-items { display: flex; flex-direction: column; gap: 4px; }
+.editor-item { display: grid; grid-template-columns: 52px 1fr auto; gap: 10px; align-items: center; padding: 6px 8px; border-radius: 8px; cursor: pointer; }
+.editor-item:hover { background: rgba(255, 220, 160, 0.06); }
+.editor-item.active { background: rgba(224, 170, 69, 0.18); box-shadow: inset 0 0 0 1px rgba(224, 170, 69, 0.6); }
+.editor-item-thumb { width: 52px; height: 52px; border-radius: 6px; overflow: hidden; background: #000; }
+.editor-item-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.editor-item-name { font-size: 18px; font-weight: 700; }
+.editor-item-sub { font-size: 13px; color: var(--c-text-dim); }
+.editor-badge { font-size: 12px; padding: 2px 8px; border-radius: 10px; white-space: nowrap; background: rgba(255, 255, 255, 0.08); }
+.editor-badge.src-remote { background: rgba(79, 192, 122, 0.25); color: #b8ffd0; }
+.editor-badge.src-local { background: rgba(200, 160, 64, 0.25); color: #ffe2a0; }
+.editor-empty { padding: 40px; text-align: center; color: var(--c-text-dim); }
+
+/* フォーム */
+.ed-section { margin-bottom: 14px; padding: 10px 12px 6px; border-radius: 8px; background: rgba(255, 255, 255, 0.025); border: 1px solid rgba(255, 255, 255, 0.06); }
+.ed-section-title { display: flex; justify-content: space-between; font-size: 17px; font-weight: 800; color: var(--c-gold-bright); letter-spacing: 0.15em; margin-bottom: 8px; }
+.ed-row { display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: flex-start; }
+.ed-field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; min-width: 120px; }
+.ed-label { font-size: 13px; color: var(--c-text-dim); letter-spacing: 0.05em; }
+.ed-control { display: flex; gap: 6px; align-items: center; }
+.ed-help { font-size: 13px; color: #8a7e6c; line-height: 1.5; }
+.ed-help.center { text-align: center; margin-top: 8px; }
+.ed-help.warn { color: #ff9a8a; }
+.ed-input {
+  font-family: var(--font-jp);
+  font-size: 17px;
+  color: #f4e8d0;
+  background: #0b0807;
+  border: 1px solid rgba(224, 170, 69, 0.4);
+  border-radius: 6px;
+  padding: 6px 10px;
+  min-width: 140px;
+}
+.ed-input:focus { outline: none; border-color: #ffe7a0; box-shadow: 0 0 0 2px rgba(255, 210, 120, 0.25); }
+.ed-input[readonly] { opacity: 0.6; }
+.ed-num { width: 110px; min-width: 0; }
+.ed-textarea { width: 100%; min-width: 0; resize: vertical; line-height: 1.5; }
+.ed-json { font-family: monospace; font-size: 14px; }
+.ed-check { display: flex; align-items: center; gap: 6px; font-size: 16px; margin: 20px 0 8px; cursor: pointer; }
+.ed-check input { width: 18px; height: 18px; accent-color: #e0aa45; }
+.ed-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ed-chip, .ed-btn {
+  font-family: var(--font-jp);
+  font-size: 15px;
+  color: #f4e8d0;
+  background: linear-gradient(180deg, #2a201a, #120d0a);
+  border: 1px solid rgba(224, 170, 69, 0.45);
+  border-radius: 6px;
+  padding: 5px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ed-chip.on { background: linear-gradient(180deg, #8a6020, #4a3008); border-color: #ffe7a0; color: #fff; }
+.ed-btn:hover, .ed-chip:hover { filter: brightness(1.25); }
+.ed-btn.primary { background: linear-gradient(180deg, #8c1c18, #3e0606); border-color: #ff8a70; }
+.ed-btn.danger { color: #ffb0a0; }
+.ed-btn.add { border-style: dashed; color: var(--c-gold-bright); }
+.ed-btn.tab { font-size: 18px; padding: 8px 26px; border-radius: 8px 8px 0 0; }
+.ed-btn.tab.active { background: linear-gradient(180deg, #8a6020, #3a2406); color: #fff; border-color: #ffe7a0; }
+.ed-list { display: flex; flex-direction: column; gap: 8px; }
+.ed-list-item { padding: 8px 10px; border-radius: 8px; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.07); }
+.ed-list-tools { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.ed-list-title { flex: 1; font-size: 15px; font-weight: 700; color: #e8d8b8; }
+.ed-list-tools .ed-btn { padding: 2px 8px; font-size: 13px; }
+.ed-effect { display: flex; flex-wrap: wrap; gap: 4px 16px; align-items: flex-start; }
+.ed-image { display: flex; gap: 12px; align-items: flex-start; }
+.ed-image-preview { border-radius: 8px; overflow: hidden; background: repeating-conic-gradient(#1a1a1a 0% 25%, #101010 0% 50%) 0 0 / 20px 20px; border: 1px dashed rgba(224, 170, 69, 0.6); display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--c-text-dim); font-size: 14px; }
+.ed-image-preview.drag { border-color: #ffe7a0; box-shadow: 0 0 20px rgba(255, 210, 120, 0.5); }
+.ed-image-preview img { width: 100%; height: 100%; object-fit: contain; }
+.ed-image-side { display: flex; flex-direction: column; gap: 6px; }
+.editor-form-footer { position: sticky; bottom: -12px; display: flex; gap: 10px; padding: 12px 0; background: linear-gradient(180deg, rgba(16, 12, 10, 0), rgba(16, 12, 10, 0.98) 30%); }
+.editor-form-footer .ed-btn { font-size: 18px; padding: 8px 22px; }
+.ed-json-wrap { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+
+/* プレビュー */
+.editor-preview-title { font-size: 17px; font-weight: 800; color: var(--c-gold-bright); letter-spacing: 0.2em; margin-bottom: 10px; }
+.ed-preview-stage { display: flex; justify-content: center; padding: 30px 0; }
+.ed-card-preview { zoom: 1.45; }
+.ed-enemy-preview { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ed-enemy-img { height: 420px; display: flex; align-items: flex-end; }
+.ed-enemy-img img { max-height: 100%; max-width: 440px; filter: drop-shadow(0 12px 24px #000); }
+.ed-preview-name { font-size: 26px; font-weight: 800; }
+.ed-actions { font-size: 16px; line-height: 1.7; padding-left: 24px; align-self: stretch; }
+.ed-event-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; background-size: cover; background-position: center; border-radius: 8px; overflow: hidden; border: 1px solid rgba(224, 170, 69, 0.4); }
+.ed-event-object { position: absolute; left: 50%; bottom: 22%; height: 62%; transform: translateX(-50%); filter: drop-shadow(0 8px 16px #000); }
+.ed-event-title { position: absolute; top: 8px; left: 0; right: 0; text-align: center; font-size: 22px; font-weight: 800; text-shadow: 0 2px 4px #000; }
+.ed-event-text { position: absolute; left: 6%; right: 6%; bottom: 5%; padding: 8px 12px; background: rgba(0, 0, 0, 0.75); border: 1px solid rgba(224, 170, 69, 0.5); font-size: 15px; }
