@@ -4,8 +4,8 @@
 // ゲームのコンテンツ（カード・敵・イベント）は3段重ねで決まる：
 //
 //   1. 同梱データ   … src/data/cards.ts など（プログラムに書いてあるもの）
-//   2. Firebase     … 開発メニューから登録したもの（チーム全員で共有）
-//   3. ローカル     … Firebase 未設定・未ログインの時に、このPCのブラウザに保存したもの
+//   2. Firebase     … 開発メニューから登録したもの（公開ページを開いた全員に反映）
+//   3. ローカル     … Firebase 未設定の時に、このPCのブラウザに保存したもの
 //
 // 起動時に loadAll() で 2 → 3 の順に上書き・追加する。
 // 開発メニュー（src/editor/）は、このファイルの save / remove / uploadImage を使う。
@@ -20,7 +20,7 @@ import { EVENTS, removeEvents, upsertEvents } from '@/data/events';
 import { isFirebaseConfigured } from '@/config/firebase';
 import type { CardDef, EnemyDef, EventDef } from '@/model/types';
 import { localImageUrls } from '@/view/dom';
-import { currentUser, getFirebase } from './firebase';
+import { getFirebase } from './firebase';
 
 export type ContentKind = 'cards' | 'enemies' | 'events';
 export type ContentDef = CardDef | EnemyDef | EventDef;
@@ -203,16 +203,15 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 // =============================================================
 // 公開API
 // =============================================================
-export type ContentMode = 'local' | 'remote-readonly' | 'remote';
+export type ContentMode = 'local' | 'remote';
 
 export const Content = {
   /** 最後に読み込んだ結果（開発メニューの表示用） */
   lastLoad: { remote: 0, local: 0, error: '' as string },
 
-  /** いまの保存先：local（Firebase未設定）/ remote-readonly（未ログイン）/ remote（ログイン中） */
+  /** いまの保存先：local（Firebase 未設定）/ remote（Firebase。ログイン不要） */
   async mode(): Promise<ContentMode> {
-    if (!isFirebaseConfigured()) return 'local';
-    return (await currentUser()) ? 'remote' : 'remote-readonly';
+    return isFirebaseConfigured() ? 'remote' : 'local';
   },
 
   /** 起動時：Firebase → ローカル の順に読み込んでゲームに反映 */
@@ -253,8 +252,7 @@ export const Content = {
     const doc: StoredDoc = { id: def.id, def: structuredClone(def), updatedAt: Date.now() };
     if (mode === 'remote') {
       const { db, fs } = await getFirebase()!;
-      const user = await currentUser();
-      await fs.setDoc(fs.doc(db, kind, def.id), { def: doc.def, deleted: false, updatedAt: fs.serverTimestamp(), updatedBy: user?.email ?? '' });
+      await fs.setDoc(fs.doc(db, kind, def.id), { def: doc.def, deleted: false, updatedAt: fs.serverTimestamp() });
       // 同じ id のローカル保存は不要になるので消す
       const local = readLocal();
       delete local[kind][def.id];
@@ -322,7 +320,7 @@ export const Content = {
 
   /** ローカルに保存したものを Firebase にまとめてアップロード（画像も含む） */
   async pushLocalToRemote(): Promise<number> {
-    if ((await this.mode()) !== 'remote') throw new Error('Firebase にログインしてください');
+    if ((await this.mode()) !== 'remote') throw new Error('Firebase が設定されていません');
     const local = readLocal();
     let n = 0;
     for (const kind of CONTENT_KINDS) {

@@ -18,9 +18,8 @@
 .editor-title { font-size: 30px; font-weight: 800; letter-spacing: 0.2em; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .editor-mode { padding: 4px 14px; border-radius: 14px; font-size: 16px; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); }
 .editor-mode.mode-remote { border-color: #4fc07a; color: #b8ffd0; }
-.editor-mode.mode-local, .editor-mode.mode-remote-readonly { border-color: #c8a040; color: #ffe2a0; }
+.editor-mode.mode-local { border-color: #c8a040; color: #ffe2a0; }
 .editor-header-btns { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-.editor-user { font-size: 15px; color: var(--c-text-dim); }
 .editor-tabs { display: flex; gap: 6px; padding: 10px 24px 0; }
 .editor-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 400px 1fr 500px; gap: 14px; padding: 12px 24px; }
 .editor-list, .editor-form, .editor-preview {

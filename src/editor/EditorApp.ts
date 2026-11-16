@@ -4,7 +4,7 @@
 // タイトル画面の「開発メニュー」から開く。カード・敵キャラ・イベントを
 // 一覧から選んで編集したり、新しく登録したりできる。
 //
-//   ┌ 開発メニュー  [保存先: ローカル / Firebase]  [ログイン] [JSON書き出し] [閉じる]
+//   ┌ 開発メニュー  [保存先: ローカル / Firebase]  [JSON書き出し] [閉じる]
 //   │ [カード] [敵キャラ] [イベント]
 //   │ ┌ 一覧 ──┐ ┌ 入力フォーム ───────┐ ┌ プレビュー ┐
 //   │ │ 検索    │ │                       │ │            │
@@ -12,11 +12,11 @@
 //   │ └────┘ └───────────┘ └──────┘
 //
 // 保存すると、すぐにゲームに反映される（次の戦闘・報酬から出てくる）。
-// 保存先は services/content.ts が決める（Firebase にログイン中なら Firebase、それ以外はこのPC）。
+// 保存先は services/content.ts が決める（Firebase が設定されていれば Firebase、無ければこのPC）。
+// ログインは不要。
 // =============================================================
 import { Content, type ContentDef, type ContentKind, type ContentMode } from '@/services/content';
 import { isFirebaseConfigured } from '@/config/firebase';
-import { signIn, signOut, currentUser } from '@/services/firebase';
 import { asset, clear, h } from '@/view/dom';
 import { ui } from '@/view/ui';
 import { confirmDialog } from '@/view/components/Modal';
@@ -26,8 +26,7 @@ import { prepareImage, type ImageUse } from './imageTools';
 
 const MODE_LABEL: Record<ContentMode, string> = {
   local: '保存先：このPC（Firebase 未設定）',
-  'remote-readonly': '保存先：このPC（Firebase 未ログイン）',
-  remote: '保存先：Firebase（チームで共有）',
+  remote: '保存先：Firebase（みんなに反映）',
 };
 const SOURCE_LABEL = { bundled: '同梱', remote: 'Firebase', local: 'このPC' } as const;
 
@@ -62,22 +61,10 @@ export function openEditor(): Promise<void> {
     const renderHeader = async () => {
       clear(header);
       const mode = await Content.mode();
-      const user = await currentUser();
       header.append(
         h('div.editor-title', {}, '開発メニュー'),
         h(`div.editor-mode.mode-${mode}`, {}, MODE_LABEL[mode]),
         h('div.editor-header-btns', {}, [
-          isFirebaseConfigured() && !user ? smallBtn('Google でログイン', async () => {
-            try {
-              await signIn();
-              setStatus('ログインしました', 'ok');
-            } catch (e) {
-              setStatus(`ログインできませんでした：${e}`, 'err');
-            }
-            renderHeader();
-          }) : null,
-          user ? h('span.editor-user', {}, user.email ?? '') : null,
-          user ? smallBtn('ログアウト', async () => { await signOut(); renderHeader(); }) : null,
           mode === 'remote' && Content.lastLoad.local > 0 ? smallBtn('このPCの登録を Firebase へ送る', async () => {
             try {
               const n = await Content.pushLocalToRemote();
@@ -281,6 +268,6 @@ export function openEditor(): Promise<void> {
     renderTabs();
     renderList();
     renderForm();
-    setStatus(isFirebaseConfigured() ? 'Firebase に接続しています。登録するには Google でログインしてください。' : 'Firebase が未設定のため、このPCのブラウザに保存します（docs/FIREBASE.md を参照）。');
+    setStatus(isFirebaseConfigured() ? 'Firebase に保存します。保存した内容は、公開ページを開いた全員のゲームに反映されます。' : 'Firebase が未設定のため、このPCのブラウザに保存します（docs/FIREBASE.md を参照）。');
   });
 }

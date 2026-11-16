@@ -2,26 +2,26 @@
 // Firestore のセキュリティルール（DarkSurvive）
 // -------------------------------------------------------------
 // ・カード／敵／イベントのデータは誰でも読める（ゲームが起動時に読み込むため）
-// ・書き込めるのは「編集者」として登録したアカウントだけ
+// ・書き込みも誰でもできる（開発メニューからログインなしで反映するため）
+//   ※ 公開ページを開いた人なら誰でも書き換え・削除できる状態です。
+//     困ったときは、開発メニューの「JSON 書き出し」で取っておいたバックアップから戻せます。
+// ・ゲームが読み込めない形のデータで壊れないよう、置き場所と項目名だけは制限する
 //
-// ★下の EDITORS に、開発メニューで登録作業をする人の Google アカウントの
-//   メールアドレスを書いてから、Firebase コンソールの
-//   「Firestore Database → ルール」に貼り付けて「公開」してください。
+// Firebase コンソールの「Firestore Database → ルール」に貼り付けて「公開」してください。
 // =============================================================
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isEditor() {
-      return request.auth != null
-        && request.auth.token.email_verified == true
-        && request.auth.token.email in [
-          'editor1@example.com' // ← ここを自分のメールアドレスに変える（複数ならカンマ区切り）
-        ];
+    function isContent(kind) {
+      return kind in ['cards', 'enemies', 'events'];
     }
 
     match /{kind}/{id} {
-      allow read: if kind in ['cards', 'enemies', 'events'];
-      allow write: if kind in ['cards', 'enemies', 'events'] && isEditor();
+      allow read: if isContent(kind);
+      allow create, update: if isContent(kind)
+        && id.matches('^[a-z0-9_]{1,64}$')
+        && request.resource.data.keys().hasOnly(['def', 'deleted', 'updatedAt', 'updatedBy']);
+      allow delete: if isContent(kind);
     }
   }
 }
