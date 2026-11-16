@@ -10,6 +10,7 @@
 // =============================================================
 import { Audio } from '@/core/AudioManager';
 import { zoneOfFloor } from '@/config/balance';
+import { BOSS_BGM } from '@/data/audio';
 import { getZone } from '@/data/floors';
 import { getItem } from '@/data/items';
 import { Combat, type BattleKind } from '@/model/Combat';
@@ -31,7 +32,8 @@ export async function runBattle(ctx: GameController, kind: BattleKind, enemyIds?
   const combat = new Combat(gs, ids, kind, floor, gs.rng);
   const zone = getZone(zoneOfFloor(floor));
 
-  Audio.playBgm(kind === 'boss' ? 'bgm_boss' : kind === 'elite' ? 'bgm_elite' : 'bgm_battle', 0.6);
+  const bossId = ids.find((id) => BOSS_BGM[id]);
+  Audio.playBgm(kind === 'boss' ? (bossId && BOSS_BGM[bossId]) || 'bgm_boss' : kind === 'elite' ? 'bgm_elite' : 'bgm_battle', 0.6);
   Audio.play('se_door');
 
   let scene!: BattleScene;

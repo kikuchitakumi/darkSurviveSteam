@@ -331,20 +331,84 @@ function wind(out: Float32Array, dur: number, vol = 0.05): void {
   noise(out, { start: 0, dur, vol, lp: (t) => 300 + 200 * Math.sin(t * 0.4) + 120 * Math.sin(t * 1.3), attack: 1 });
 }
 
+/**
+ * 合成の歌声（「アー」と歌う声）。
+ * ノコギリ波（声帯の振動）を、母音の響き（フォルマント）を作るバンドパスフィルタに通す。
+ * 本物の歌声ではないが、何人も重ねると聖歌隊のように聞こえる。
+ */
+const VOWEL = {
+  /** 男声の「ア」 */
+  aMale: [[730, 90, 1], [1090, 110, 0.5], [2440, 140, 0.18]],
+  /** 女声の「ア」 */
+  aFemale: [[850, 100, 1], [1220, 120, 0.55], [2810, 160, 0.25]],
+  /** 「オ」 */
+  o: [[480, 80, 1], [820, 90, 0.4], [2700, 140, 0.08]],
+} as const;
+function voice(out: Float32Array, start: number, dur: number, midi: number, vol: number, formants: readonly (readonly number[])[], seed: number): void {
+  const r = makeRng(seed);
+  const s0 = Math.floor(start * SR);
+  const att = 0.9;
+  const rel = 1.6;
+  const n = Math.floor((dur + rel) * SR);
+  const f0 = mtof(midi) * (1 + (r() - 0.5) * 0.008); // 1人ずつ少し音程がずれる
+  const vibRate = 4.8 + r() * 1.2;
+  const vibPh = r() * Math.PI * 2;
+  const bp = formants.map(([f, bw, g]) => {
+    const w0 = (2 * Math.PI * f) / SR;
+    const alpha = Math.sin(w0) / (2 * (f / bw));
+    const a0 = 1 + alpha;
+    return { b0: alpha / a0, b2: -alpha / a0, a1: (-2 * Math.cos(w0)) / a0, a2: (1 - alpha) / a0, g, x1: 0, x2: 0, y1: 0, y2: 0 };
+  });
+  let ph = r();
+  for (let i = 0; i < n; i++) {
+    const idx = s0 + i;
+    if (idx < 0 || idx >= out.length) continue;
+    const t = i / SR;
+    // ビブラートは歌い出しから少し遅れてかかる
+    const vib = 1 + Math.sin(t * Math.PI * 2 * vibRate + vibPh) * 0.006 * Math.min(1, t / 1.2);
+    ph += (f0 * vib) / SR;
+    const x = (2 * (ph - Math.floor(ph)) - 1) + (r() * 2 - 1) * 0.08; // 声帯＋息の音
+    let y = 0;
+    for (const f of bp) {
+      const v = f.b0 * x + f.b2 * f.x2 - f.a1 * f.y1 - f.a2 * f.y2;
+      f.x2 = f.x1; f.x1 = x; f.y2 = f.y1; f.y1 = v;
+      y += v * f.g;
+    }
+    let env = t < att ? Math.sin((t / att) * Math.PI * 0.5) : 1;
+    if (t > dur) env *= Math.max(0, 1 - (t - dur) / rel);
+    out[idx] += y * env * vol;
+  }
+}
+/** 同じ音を何人かで歌う（合唱） */
+function choir(out: Float32Array, start: number, dur: number, midi: number, vol: number, formants: readonly (readonly number[])[], seed: number, singers = 4): void {
+  for (let k = 0; k < singers; k++) voice(out, start + k * 0.04, dur, midi, vol / Math.sqrt(singers), formants, seed * 31 + k);
+}
+
 const BGM_RECIPES: Record<string, () => Float32Array> = {
-  // ---- タイトル：重いドローン＋オルゴール ----
+  // ---- タイトル：聖歌隊（合成の歌声）＋オルガン＋遠くの鐘 ----
   bgm_title: () => {
-    const L = 36;
-    const o = buf(L + 4);
-    tone(o, { start: 0, dur: L + 2, freq: mtof(38), vol: 0.18, attack: 0.01, lp: 400 });
-    tone(o, { start: 0, dur: L + 2, freq: mtof(26), type: 'saw', vol: 0.08, lp: 220, detune: 0.004 });
-    const chords = [[50, 53, 57], [46, 50, 53], [43, 46, 50], [45, 49, 52]];
-    chords.forEach((c, i) => pad(o, i * 9, 9, c, 0.035, 700));
-    const scale = [74, 77, 79, 81, 84, 86, 89];
-    rand = makeRng(7);
-    for (let t = 0.5; t < L - 1; t += 1.2 + rand() * 1.8) musicBox(o, t, scale[Math.floor(rand() * scale.length)], 0.09);
-    wind(o, L + 2, 0.06);
-    return normalize(wrapLoop(reverb(o, 0.45, 0.88), Math.floor(L * SR)), 0.8);
+    const C = 5.5; // 1和音の長さ（秒）
+    // ニ短調の聖歌風の進行：Dm - B♭ - F - C - Gm - Dm - Asus4 - A
+    const chords = [[50, 57, 62, 65], [46, 58, 62, 65], [53, 57, 60, 65], [48, 55, 60, 64], [43, 55, 58, 62], [50, 57, 62, 65], [45, 57, 62, 64], [45, 57, 61, 64]];
+    const L = chords.length * C;
+    const o = buf(L + 5);
+    // 低いドローン（オルガンのペダル）
+    tone(o, { start: 0, dur: L + 2, freq: mtof(38), vol: 0.1, attack: 2, lp: 300 });
+    chords.forEach((ch, i) => {
+      const t = i * C;
+      // 男声（下の2音）と女声（上の2音）
+      choir(o, t, C - 0.3, ch[0], 0.05, VOWEL.o, i * 4 + 1);
+      choir(o, t, C - 0.3, ch[1], 0.045, VOWEL.aMale, i * 4 + 2);
+      choir(o, t, C - 0.3, ch[2], 0.04, VOWEL.aFemale, i * 4 + 3);
+      choir(o, t, C - 0.3, ch[3], 0.035, VOWEL.aFemale, i * 4 + 4);
+      // オルガン（柔らかいサイン波の和音）
+      for (const m of ch) tone(o, { start: t, dur: C, freq: mtof(m), vol: 0.018, attack: 1.2, release: 1.5 });
+      if (i % 2 === 0) metal(o, t, 98, 0.1, 2.2); // 遠くの鐘
+    });
+    // ソプラノの旋律（ゆっくりした聖歌）
+    const melody = [74, 72, 69, 70, 69, 67, 65, 64, 62, 65, 67, 69, 70, 69, 67, 69];
+    melody.forEach((m, i) => choir(o, i * (C / 2) + 0.2, C / 2 - 0.1, m, 0.05, VOWEL.aFemale, 200 + i, 3));
+    return normalize(wrapLoop(reverb(lowpass(o, 6000), 0.6, 0.9), Math.floor(L * SR)), 0.8);
   },
   // ---- 塔の探索：不穏な環境音 ----
   bgm_tower: () => {

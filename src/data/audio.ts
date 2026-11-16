@@ -17,6 +17,12 @@ export interface SoundDef {
   volume: number;
   /** 何に使う音か（メモ） */
   usage: string;
+  /**
+   * 長い曲（数分ある市販・外部の曲）は true にする。
+   * 全体をメモリに展開せず、少しずつ読み込みながら再生する（1曲で数百MB使うのを防ぐ）。
+   * 短いループ曲（自動生成のBGM）は false のまま＝継ぎ目なくループする。
+   */
+  stream?: boolean;
 }
 
 /** 効果音（SE） */
@@ -57,14 +63,32 @@ export const SE = {
 
 /** BGM（ループ再生） */
 export const BGM = {
-  bgm_title: { file: 'audio/bgm/bgm_title_custom.mp3', volume: 0.55, usage: 'タイトル画面' },
+  bgm_title: { file: 'audio/bgm/bgm_title_choir.mp3', volume: 0.6, usage: 'タイトル画面（合成の聖歌隊）' },
   bgm_tower: { file: 'audio/bgm/bgm_tower.mp3', volume: 0.5, usage: '塔の探索中' },
   bgm_battle: { file: 'audio/bgm/bgm_battle.mp3', volume: 0.5, usage: '通常戦闘' },
   bgm_elite: { file: 'audio/bgm/bgm_elite.mp3', volume: 0.5, usage: '強敵戦' },
-  bgm_boss: { file: 'audio/bgm/bgm_boss.mp3', volume: 0.55, usage: 'ボス戦' },
+  bgm_boss: { file: 'audio/bgm/bgm_boss.mp3', volume: 0.55, usage: 'ボス戦（自動生成・BOSS_BGM に無いボス用）' },
+  bgm_boss_queens: { file: 'audio/bgm/bgm_boss_queens.mp3', volume: 0.5, usage: 'ボス戦（Battle Queens）', stream: true },
+  bgm_boss_queens2: { file: 'audio/bgm/bgm_boss_queens2.mp3', volume: 0.5, usage: 'ボス戦（Battle Queens 別バージョン）', stream: true },
+  bgm_boss_brains: { file: 'audio/bgm/bgm_boss_brains.mp3', volume: 0.5, usage: 'ボス戦（Battle of the Brains）', stream: true },
+  bgm_boss_final: { file: 'audio/bgm/bgm_boss_final.mp3', volume: 0.55, usage: '最終ボス戦（旧タイトル曲）', stream: true },
   bgm_shop: { file: 'audio/bgm/bgm_shop.mp3', volume: 0.45, usage: 'ショップ（闇商人含む）' },
   bgm_gameover: { file: 'audio/bgm/bgm_gameover.mp3', volume: 0.5, usage: 'ゲームオーバー' },
 } satisfies Record<string, SoundDef>;
 
 export type SeKey = keyof typeof SE;
 export type BgmKey = keyof typeof BGM;
+
+/** ボスごとの曲（敵ID → BGM）。ここに無いボスは bgm_boss */
+export const BOSS_BGM: Partial<Record<string, BgmKey>> = {
+  boss_flesh_warden: 'bgm_boss', // 10F
+  boss_stitched_nurse: 'bgm_boss_queens', // 20F
+  boss_writhing_researcher: 'bgm_boss_brains', // 30F
+  boss_twin_hound: 'bgm_boss_queens2', // 40F
+  boss_belfry_wraith: 'bgm_boss', // 50F
+  boss_parasite_mother: 'bgm_boss_queens', // 60F
+  boss_iron_executioner: 'bgm_boss_brains', // 70F
+  boss_abyss_priest: 'bgm_boss_queens2', // 80F
+  boss_tower_heart: 'bgm_boss', // 90F
+  boss_dawn_devourer: 'bgm_boss_final', // 100F 最終ボス
+};

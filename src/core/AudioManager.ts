@@ -9,7 +9,7 @@
 // 鳴らす音の一覧・ファイルパスは data/audio.ts で管理している。
 // =============================================================
 import { GAME_CONFIG } from '@/config/gameConfig';
-import { BGM, SE, type BgmKey, type SeKey } from '@/data/audio';
+import { BGM, SE, type BgmKey, type SeKey, type SoundDef } from '@/data/audio';
 import { settings } from './Settings';
 import { bus } from './EventBus';
 
@@ -19,7 +19,7 @@ class AudioManagerImpl {
   private bgmGain!: GainNode;
   private buffers = new Map<string, AudioBuffer>();
   private loading = new Map<string, Promise<AudioBuffer | null>>();
-  private currentBgm: { key: BgmKey; source: AudioBufferSourceNode; gain: GainNode } | null = null;
+  private currentBgm: { key: BgmKey; gain: GainNode; stop: (at: number) => void } | null = null;
   private wantedBgm: BgmKey | null = null;
   /** 同じSEが同時に鳴りすぎないための最終再生時刻 */
   private lastPlayed = new Map<string, number>();
@@ -100,7 +100,9 @@ class AudioManagerImpl {
     this.wantedBgm = key;
     if (!this.ctx) return;
     if (this.currentBgm?.key === key) return;
-    const buf = await this.load(BGM[key].file);
+    const def: SoundDef = BGM[key];
+    if (def.stream) return this.playStreamBgm(key, fadeSec);
+    const buf = await this.load(def.file);
     if (!buf || this.wantedBgm !== key || this.currentBgm?.key === key) return;
     this.fadeOutCurrent(fadeSec);
     const src = this.ctx.createBufferSource();
@@ -112,10 +114,52 @@ class AudioManagerImpl {
     src.loopEnd = le;
     const g = this.ctx.createGain();
     g.gain.value = 0;
-    g.gain.linearRampToValueAtTime(BGM[key].volume, this.ctx.currentTime + fadeSec);
+    g.gain.linearRampToValueAtTime(def.volume, this.ctx.currentTime + fadeSec);
     src.connect(g).connect(this.bgmGain);
     src.start(0, ls);
-    this.currentBgm = { key, source: src, gain: g };
+    this.currentBgm = { key, gain: g, stop: (at) => src.stop(at) };
+  }
+
+  /**
+   * 長い曲は <audio> 要素で少しずつ読み込みながら再生する。
+   * （全体を展開すると 9分の曲で約200MB のメモリを使うため）
+   */
+  private async playStreamBgm(key: BgmKey, fadeSec: number): Promise<void> {
+    const ctx = this.ctx!;
+    const def: SoundDef = BGM[key];
+    const el = new window.Audio(`${GAME_CONFIG.ASSET_ROOT}/${def.file}`);
+    el.loop = true;
+    el.preload = 'auto';
+    const node = ctx.createMediaElementSource(el);
+    const g = ctx.createGain();
+    g.gain.value = 0;
+    node.connect(g).connect(this.bgmGain);
+    const release = () => {
+      el.pause();
+      el.removeAttribute('src');
+      el.load();
+      node.disconnect();
+      g.disconnect();
+    };
+    try {
+      await el.play();
+    } catch (e) {
+      console.warn('[Audio] stream failed:', def.file, e);
+      release();
+      return;
+    }
+    if (this.wantedBgm !== key || this.currentBgm?.key === key) {
+      release();
+      return;
+    }
+    this.fadeOutCurrent(fadeSec);
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(def.volume, ctx.currentTime + fadeSec);
+    this.currentBgm = {
+      key,
+      gain: g,
+      stop: (at) => window.setTimeout(release, Math.max(0, (at - ctx.currentTime) * 1000)),
+    };
   }
 
   /** 先頭・末尾の無音を除いたループ範囲（秒）を求める */
@@ -137,13 +181,17 @@ class AudioManagerImpl {
 
   private fadeOutCurrent(fadeSec: number): void {
     if (!this.ctx || !this.currentBgm) return;
-    const { source, gain } = this.currentBgm;
+    const { key, stop, gain } = this.currentBgm;
     const t = this.ctx.currentTime;
     gain.gain.cancelScheduledValues(t);
     gain.gain.setValueAtTime(gain.gain.value, t);
     gain.gain.linearRampToValueAtTime(0, t + fadeSec);
-    source.stop(t + fadeSec + 0.05);
+    stop(t + fadeSec + 0.05);
     this.currentBgm = null;
+    // 使い終わった曲の展開済みデータは捨てる（BGM を全部抱えるとメモリを大きく使うため）
+    const file = BGM[key].file;
+    this.buffers.delete(file);
+    this.loading.delete(file);
   }
 
   /** BGM を一時的に小さくする（演出用：ボス登場など） */
