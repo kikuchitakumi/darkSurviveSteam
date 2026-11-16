@@ -9,6 +9,9 @@
 //
 //  - 既にファイルがある場合はスキップ（本番画像を上書きしないため）
 //    → 全て作り直したい時は `npm run gen:images -- --force`
+//    → 種類を絞って作り直す時は `npm run gen:images -- --only=cardArt,cardFrame`
+//      （--only で指定した種類は、既存のファイルも上書きする）
+//      カード関係の種類：cardArt / cardFrame / cardPlate / costGem / cardBack / sigil
 //  - 新しいカードや敵を data/ に追加したら、このコマンドを実行するだけで
 //    仮画像が自動で用意される。
 // =============================================================
@@ -29,6 +32,8 @@ import { IMAGES, collectAllImagePaths } from '../src/data/images';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'public', 'assets');
 const FORCE = process.argv.includes('--force');
+/** --only=種類,種類 … 指定した種類だけを作り直す */
+const ONLY = (process.argv.find((a) => a.startsWith('--only='))?.slice(7).split(',').filter(Boolean)) ?? null;
 
 interface Spec {
   path: string;
@@ -42,8 +47,8 @@ interface Spec {
 
 // ---- 絵文字の割り当て（仮画像のシンボル） ----
 const CARD_SYMBOL: Record<string, string> = {
-  block: '🛡️', iron_wall: '🧱', steadfast: '🏰', rally: '📯', rest: '🛌', prayer: '🙏', inspiration: '💡', blessing: '✨', dark_blessing: '🌑',
-  retaliate: '🔁', pride: '👑', scheme: '🕸️', trickery: '🎭', blood_price: '🩸', tit_for_tat: '⚖️', selection: '🃏',
+  block: '🛡️', iron_wall: '🧱', steadfast: '🏰', rally: '📯', rest: '⛺', prayer: '🙏', inspiration: '📜', blessing: '✨', dark_blessing: '🌑',
+  retaliate: '🐍', pride: '👑', scheme: '🕸️', trickery: '🎭', blood_price: '🍷', tit_for_tat: '⚖️', selection: '🃏',
   stone_throw: '🪨', fury: '💢', issen: '🗡️', bone_breaker: '🦴', triple_slash: '⚔️', lethal_blow: '💀', lion_dance: '🦁', armor_break: '🔨',
   black_flame: '🔥', inferno: '🌋', flame_vortex: '🌪️', underworld_flame: '☄️', ashes: '🌫️', will_o_wisp: '👻',
   blood_flash: '🩸', crimson_slash: '🗡️', corpse_pile: '⚰️', curse_flame: '🕯️', death_curse: '☠️', grudge: '👁️',
@@ -122,12 +127,14 @@ function buildSpecs(): Spec[] {
   // ---- カード ----
   CARDS.forEach((c) => list.push(spec(c.image, 'cardArt', 480, 450, `カード絵：${c.name}`, { variant: c.element ?? c.type, symbol: CARD_SYMBOL[c.id] ?? '🃏' })));
   for (const [rarity, p] of Object.entries(IMAGES.cardFrame)) list.push(spec(p, 'cardFrame', 440, 616, `カード枠(${rarity})`, { variant: rarity }));
+  for (const [rarity, p] of Object.entries(IMAGES.cardPlate)) list.push(spec(p, 'cardPlate', 440, 76, `カード名の名札(${rarity})`, { variant: rarity }));
   list.push(spec(IMAGES.cardBack, 'cardBack', 440, 616, 'カード裏面'));
   list.push(spec(IMAGES.cardCostGem, 'costGem', 128, 128, 'カードのコスト宝石'));
   const typeIcon: Record<string, [string, number]> = { attack: ['⚔️', 0], defense: ['🛡️', 215], support: ['✨', 40], buff: ['🔺', 38], debuff: ['🌀', 275], special: ['✴️', 150] };
-  for (const [type, p] of Object.entries(IMAGES.cardType)) list.push(spec(p, 'medallionIcon', 96, 96, `カード種別：${type}`, { symbol: typeIcon[type][0], hue: typeIcon[type][1], sat: 70 }));
+  // カードの種類・系統は「羊皮紙に押した墨の印」
+  for (const [type, p] of Object.entries(IMAGES.cardType)) list.push(spec(p, 'sigil', 96, 96, `カード種別：${type}`, { symbol: typeIcon[type][0] }));
   const elementIcon: Record<string, [string, number]> = { sword: ['🗡️', 355], magic: ['🔮', 255], blood: ['🩸', 350], curse: ['☠️', 130] };
-  for (const [el, p] of Object.entries(IMAGES.cardElement)) list.push(spec(p, 'medallionIcon', 96, 96, `攻撃の系統：${el}`, { symbol: elementIcon[el][0], hue: elementIcon[el][1], sat: 70 }));
+  for (const [el, p] of Object.entries(IMAGES.cardElement)) list.push(spec(p, 'sigil', 96, 96, `攻撃の系統：${el}`, { symbol: elementIcon[el][0] }));
 
   // ---- アイテム・鍵・装備（元の色を活かしたメダリオン） ----
   ITEMS.forEach((i) => list.push(spec(i.image, 'itemIcon', 160, 160, `アイテム：${i.name}`, { symbol: ITEM_SYMBOL[i.id] ?? '🧪', rim: i.rarity === 'legendary' ? 'gold' : i.rarity === 'rare' ? 'silver' : 'bronze', hue: 25 })));
@@ -181,13 +188,18 @@ async function main() {
   await page.setContent('<html><body style="margin:0;background:#000"></body></html>');
   await page.addStyleTag({ content: "@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@900&display=swap');" }).catch(() => {});
   await page.addScriptTag({ content: readFileSync(join(ROOT, 'tools', 'placeholder-draw.js'), 'utf8') });
+  await page.addScriptTag({ content: readFileSync(join(ROOT, 'tools', 'card-draw.js'), 'utf8') });
   await page.waitForTimeout(500);
 
   let made = 0;
   let skipped = 0;
   for (const s of specs) {
     const out = s.path.startsWith('../') ? join(ROOT, 'public', basename(s.path)) : join(OUT, s.path);
-    if (existsSync(out) && !FORCE) {
+    if (ONLY && !ONLY.includes(s.type)) {
+      skipped++;
+      continue;
+    }
+    if (existsSync(out) && !FORCE && !ONLY) {
       skipped++;
       continue;
     }

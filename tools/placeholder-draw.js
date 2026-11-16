@@ -4,7 +4,7 @@
 // generate-placeholders.ts から Edge(ヘッドレス) に読み込まれ、
 // Canvas で仮画像を描いて PNG / WebP(dataURL) を返す。
 //
-// 目指す見た目：Shadowverse のような「重厚で高級感のあるダークファンタジー」
+// 目指す見た目：「重厚で高級感のあるダークファンタジー」
 //   - 金属（金・銀・銅）の質感：多段グラデーション＋面取り（ベベル）＋ハイライト
 //   - 唐草模様（フィリグリー）・カット宝石・メダリオン
 //   - 絵文字を「金の浮き彫り」に加工してアイコン化
@@ -1996,133 +1996,8 @@
   }
 
   // =============================================================
-  // カード
+  // カード（枠・イラスト・コスト・裏面・紋章）は tools/card-draw.js
   // =============================================================
-  const RARITY_STYLE = {
-    basic: { metal: 'bronze', gem: 25 },
-    common: { metal: 'silver', gem: 205 },
-    rare: { metal: 'gold', gem: 215 },
-    legendary: { metal: 'gold', gem: 'prism' },
-  };
-  const TYPE_HUE = { attack: 0, defense: 215, buff: 38, debuff: 275, special: 150, support: 42, sword: 355, magic: 255, blood: 345, curse: 125 };
-
-  /**
-   * カード枠（2倍解像度 440x616 / 表示は 220x308）
-   * 透明部分：イラスト窓。半透明：説明欄。名前のリボンは CSS で上に重ねる。
-   */
-  function drawCardFrame(ctx, w, h, spec) {
-    const st = RARITY_STYLE[spec.variant] || RARITY_STYLE.basic;
-    const kind = st.metal;
-    const box = [0, 0, w, h];
-    // 本体（暗い金属）
-    roundRectPath(ctx, 8, 8, w - 16, h - 16, 26);
-    let g = ctx.createLinearGradient(0, 0, w, h);
-    g.addColorStop(0, '#2a2119');
-    g.addColorStop(0.5, '#120d0a');
-    g.addColorStop(1, '#221a14');
-    ctx.fillStyle = g;
-    ctx.fill();
-    // 本体の模様（細い格子＋ざらつき）
-    ctx.save();
-    roundRectPath(ctx, 8, 8, w - 16, h - 16, 26);
-    ctx.clip();
-    ctx.strokeStyle = 'rgba(255,220,160,0.035)';
-    ctx.lineWidth = 1;
-    for (let i = -h; i < w; i += 14) {
-      ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + h, h); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(i + h, 0); ctx.lineTo(i, h); ctx.stroke();
-    }
-    ctx.restore();
-
-    // イラスト窓をくり抜く（CSS: left 15 / top 15 / 190x178 → 2倍）
-    const ax = 30, ay = 30, aw = 380, ah = 356;
-    ctx.save();
-    ctx.globalCompositeOperation = 'destination-out';
-    roundRectPath(ctx, ax, ay, aw, ah, 14);
-    ctx.fill();
-    ctx.restore();
-    // イラスト窓の内側の影（額縁の奥行き）
-    ctx.save();
-    roundRectPath(ctx, ax, ay, aw, ah, 14);
-    ctx.clip();
-    ctx.shadowColor = 'rgba(0,0,0,0.95)';
-    ctx.shadowBlur = 26;
-    ctx.lineWidth = 30;
-    ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-    roundRectPath(ctx, ax - 15, ay - 15, aw + 30, ah + 30, 24);
-    ctx.stroke();
-    ctx.restore();
-    bevelStroke(ctx, () => roundRectPath(ctx, ax, ay, aw, ah, 14), 7, kind, box);
-
-    // 説明欄（CSS: left 15 / top 214 / 190x80 → 2倍）
-    const dx = 30, dy = 428, dw = 380, dh = 160;
-    roundRectPath(ctx, dx, dy, dw, dh, 12);
-    g = ctx.createLinearGradient(0, dy, 0, dy + dh);
-    g.addColorStop(0, 'rgba(26,20,16,0.97)');
-    g.addColorStop(1, 'rgba(10,8,6,0.97)');
-    ctx.fillStyle = g;
-    ctx.fill();
-    bevelStroke(ctx, () => roundRectPath(ctx, dx, dy, dw, dh, 12), 4, kind, box);
-    ctx.strokeStyle = 'rgba(217,178,106,0.22)';
-    ctx.lineWidth = 1.5;
-    roundRectPath(ctx, dx + 9, dy + 9, dw - 18, dh - 18, 8);
-    ctx.stroke();
-
-    // 外枠（太い金属のベベル＋内側の細線）
-    bevelStroke(ctx, () => roundRectPath(ctx, 12, 12, w - 24, h - 24, 24), 15, kind, box);
-    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
-    ctx.lineWidth = 2;
-    roundRectPath(ctx, 21, 21, w - 42, h - 42, 18);
-    ctx.stroke();
-
-    // 角の唐草
-    const cs = 74;
-    cornerOrnament(ctx, 16, 16, cs, 0, kind);
-    cornerOrnament(ctx, w - 16, 16, cs, Math.PI / 2, kind);
-    cornerOrnament(ctx, w - 16, h - 16, cs, Math.PI, kind);
-    cornerOrnament(ctx, 16, h - 16, cs, -Math.PI / 2, kind);
-    // 側面の留め具（宝石）
-    for (const sx of [14, w - 14]) gem(ctx, sx, 404, 11, st.gem === 'prism' ? 'prism' : st.gem, 6, kind);
-    // 下部中央のレア度の宝石
-    gem(ctx, w / 2, h - 16, 17, st.gem, 8, kind);
-    // 上部中央の飾り
-    leaf(ctx, w / 2 - 2, 16, 40, -Math.PI + 0.25, kind);
-    leaf(ctx, w / 2 + 2, 16, 40, -0.25, kind);
-    if (spec.variant === 'legendary') {
-      // 虹色の光沢を縁に重ねる
-      ctx.save();
-      ctx.globalCompositeOperation = 'overlay';
-      const cg = ctx.createConicGradient ? ctx.createConicGradient(0, w / 2, h / 2) : null;
-      if (cg) {
-        ['#ff5a5a', '#ffd25a', '#5aff8a', '#5ac8ff', '#b05aff', '#ff5a5a'].forEach((c, i) => cg.addColorStop(i / 5, c));
-        ctx.strokeStyle = cg;
-        ctx.lineWidth = 15;
-        roundRectPath(ctx, 12, 12, w - 24, h - 24, 24);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-  }
-
-  /** コストの宝石（燃える琥珀のクリスタル＋金の台座と羽飾り） */
-  function drawCostGem(ctx, w, h) {
-    const cx = w / 2;
-    const cy = h / 2;
-    const r = w * 0.32;
-    // 羽飾り
-    leaf(ctx, cx - r * 0.6, cy + r * 0.5, r * 1.1, Math.PI * 0.8, 'gold');
-    leaf(ctx, cx + r * 0.6, cy + r * 0.5, r * 1.1, Math.PI * 0.2, 'gold');
-    glow(ctx, cx, cy, r * 1.7, 'rgba(255,120,40,A)', 0.6);
-    gem(ctx, cx, cy, r, 18, 8, 'gold', -Math.PI / 2 + Math.PI / 8);
-    // 中央を少し暗くして数字を読みやすく
-    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 0.6);
-    g.addColorStop(0, 'rgba(60,10,0,0.55)');
-    g.addColorStop(1, 'rgba(60,10,0,0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(cx, cy, r * 0.6, 0, TAU);
-    ctx.fill();
-  }
 
   /** AP のクリスタル（点灯／消灯） */
   function drawApCrystal(ctx, w, h, spec) {
@@ -2365,71 +2240,6 @@
     cornerOrnament(ctx, 18, h - 18, cs, -Math.PI / 2, 'gold', 0);
   }
 
-  function drawCardBack(ctx, w, h) {
-    roundRectPath(ctx, 6, 6, w - 12, h - 12, 26);
-    let g = ctx.createRadialGradient(w / 2, h / 2, 10, w / 2, h / 2, w * 0.8);
-    g.addColorStop(0, '#5a0c0c');
-    g.addColorStop(0.6, '#240404');
-    g.addColorStop(1, '#0c0101');
-    ctx.fillStyle = g;
-    ctx.fill();
-    // 放射状の模様
-    ctx.save();
-    roundRectPath(ctx, 6, 6, w - 12, h - 12, 26);
-    ctx.clip();
-    ctx.strokeStyle = 'rgba(255,190,120,0.08)';
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 48; i++) {
-      const a = (i / 48) * TAU;
-      ctx.beginPath();
-      ctx.moveTo(w / 2, h / 2);
-      ctx.lineTo(w / 2 + Math.cos(a) * w, h / 2 + Math.sin(a) * w);
-      ctx.stroke();
-    }
-    ctx.restore();
-    bevelStroke(ctx, () => roundRectPath(ctx, 14, 14, w - 28, h - 28, 22), 14, 'gold', [0, 0, w, h]);
-    bevelStroke(ctx, () => roundRectPath(ctx, 40, 40, w - 80, h - 80, 14), 4, 'gold', [0, 0, w, h]);
-    for (const [x, y, rot] of [[18, 18, 0], [w - 18, 18, Math.PI / 2], [w - 18, h - 18, Math.PI], [18, h - 18, -Math.PI / 2]]) cornerOrnament(ctx, x, y, 80, rot, 'gold');
-    medallion(ctx, w / 2, h / 2, w * 0.28, 0, 'gold', 70);
-    emblem(ctx, '👁️', w / 2, h / 2, w * 0.3, 'relief', 'gold', 'rgba(255,60,40,0.9)');
-  }
-
-  /** カードイラスト（劇的な光＋金の浮き彫りの紋章） */
-  function drawCardArt(ctx, w, h, spec) {
-    const r = rng(hash(spec.path));
-    const hue = TYPE_HUE[spec.variant] ?? 0;
-    let g = ctx.createRadialGradient(w / 2, h * 0.45, 10, w / 2, h / 2, w * 0.8);
-    g.addColorStop(0, `hsl(${hue}, 55%, 30%)`);
-    g.addColorStop(0.5, `hsl(${hue}, 60%, 12%)`);
-    g.addColorStop(1, `hsl(${hue}, 50%, 4%)`);
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, w, h);
-    // 背景の渦（魔力のうねり）
-    ctx.save();
-    ctx.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 7; i++) {
-      ctx.strokeStyle = `hsla(${hue + (r() - 0.5) * 40}, 80%, 60%, ${0.04 + r() * 0.07})`;
-      ctx.lineWidth = 6 + r() * 26;
-      ctx.beginPath();
-      ctx.arc(w / 2 + (r() - 0.5) * 80, h / 2 + (r() - 0.5) * 80, 80 + r() * 220, r() * TAU, r() * TAU + 2);
-      ctx.stroke();
-    }
-    ctx.restore();
-    godRays(ctx, w / 2, h * 0.42, w * 0.9, TAU, 22, `hsla(${hue}, 90%, 70%, A)`, r, 0);
-    glow(ctx, w / 2, h * 0.45, w * 0.45, `hsla(${hue}, 90%, 60%, A)`, 0.6);
-    // 紋章
-    emblem(ctx, spec.symbol, w / 2, h * 0.46, h * 0.52, 'relief', spec.variant === 'defense' ? 'silver' : 'gold', `hsla(${hue}, 100%, 60%, 0.95)`);
-    // 火の粉
-    for (let i = 0; i < 40; i++) {
-      const px = r() * w;
-      const py = r() * h;
-      glow(ctx, px, py, 2 + r() * 6, `hsla(${hue + 20}, 100%, 70%, A)`, 0.8);
-    }
-    fog(ctx, w, h, h * 0.7, h, `hsla(${hue}, 40%, 30%, A)`, r, 6);
-    vignette(ctx, w, h, 0.75, 0.45);
-    tag(ctx, w, h, spec.file);
-  }
-
   /** タイトルロゴ（金属の文字） */
   function drawLogo(ctx, w, h) {
     ctx.font = `900 ${h * 0.5}px "Cinzel", "Times New Roman", serif`;
@@ -2447,6 +2257,9 @@
   // =============================================================
   // 入口
   // =============================================================
+  // 他の描画ファイル（card-draw.js）から使う部品
+  window.__pd = { TAU, EMOJI, FONT, hash, rng, canvasOf, METALS, metal, roundRectPath, bevelStroke, leaf, gem, sparkle, glow, fog, vignette, grain };
+
   window.drawAsset = function (spec) {
     const canvas = canvasOf(spec.w, spec.h);
     const ctx = canvas.getContext('2d');
@@ -2464,17 +2277,17 @@
       case 'keyIcon': drawKeyIcon(ctx, w, h, spec); break;
       case 'coin': drawCoin(ctx, w, h, spec); break;
       case 'shield': drawShieldIcon(ctx, w, h, spec); break;
-      case 'cardArt': drawCardArt(ctx, w, h, spec); break;
-      case 'cardFrame': drawCardFrame(ctx, w, h, spec); break;
-      case 'costGem': drawCostGem(ctx, w, h, spec); break;
       case 'apCrystal': drawApCrystal(ctx, w, h, spec); break;
       case 'endTurn': drawEndTurn(ctx, w, h, spec); break;
       case 'leaderFrame': drawLeaderFrame(ctx, w, h, spec); break;
       case 'portrait': drawPortrait(ctx, w, h, spec); break;
       case 'button': drawButton(ctx, w, h, spec); break;
       case 'panel': drawPanel(ctx, w, h, spec); break;
-      case 'cardBack': drawCardBack(ctx, w, h, spec); break;
       case 'logo': drawLogo(ctx, w, h, spec); break;
+      default:
+        // カード関係（tools/card-draw.js）
+        if (window.drawCardAsset && window.drawCardAsset(ctx, w, h, spec)) break;
+        throw new Error('unknown asset type: ' + spec.type);
     }
     return spec.path.endsWith('.webp') ? canvas.toDataURL('image/webp', 0.88) : canvas.toDataURL('image/png');
   };

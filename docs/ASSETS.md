@@ -71,47 +71,62 @@
 | 敵(透過) | `images/enemies/boss_abyss_priest.png` | ボス 80F：深淵の司祭（深淵の神に仕える司祭。信徒を盾にする。） | 237KB |
 | 敵(透過) | `images/enemies/boss_tower_heart.png` | ボス 90F：塔の心臓（塔全体に血を送り続ける巨大な心臓。） | 215KB |
 | 敵(透過) | `images/enemies/boss_dawn_devourer.png` | ボス 100F：夜明けを喰らうもの（塔の頂に棲む、全ての元凶。この悪夢の終わり。） | 197KB |
-| カード絵 | `images/cards/card_block.png` | ブロック：防御力×1（{block}）のシールドを得る。 | 345KB |
-| カード絵 | `images/cards/card_iron_wall.png` | 鉄壁：防御力×3（{block}）のシールドを得る。 | 328KB |
-| カード絵 | `images/cards/card_steadfast.png` | 不屈の守勢：この戦闘中、毎ターン 防御力×1のシールドを得る。 | 347KB |
-| カード絵 | `images/cards/card_rally.png` | 奮起：次のターン、攻撃力が2倍になる。 | 357KB |
-| カード絵 | `images/cards/card_rest.png` | 休息：攻撃力×1（{heal}）HP を回復する。 | 341KB |
-| カード絵 | `images/cards/card_prayer.png` | 祈り：魔力×1（{heal}）HP を回復する。 | 354KB |
-| カード絵 | `images/cards/card_inspiration.png` | 思いつき：カードを1枚引く。 | 359KB |
-| カード絵 | `images/cards/card_blessing.png` | 加護：カードを2枚引く。 | 361KB |
-| カード絵 | `images/cards/card_dark_blessing.png` | 闇の加護：カードを3枚引く。 | 350KB |
-| カード絵 | `images/cards/card_retaliate.png` | 報復：このターン受けたダメージと 同じだけ（{damage}）ダメージ。 | 332KB |
-| カード絵 | `images/cards/card_pride.png` | 誇り：この戦闘中、行動値（AP）を1上昇させる。 廃棄。 | 348KB |
-| カード絵 | `images/cards/card_scheme.png` | 謀略：相手の行動を1回キャンセルする。 | 374KB |
-| カード絵 | `images/cards/card_trickery.png` | 小手先：この戦闘中、ダメージが +2 増加する。 | 360KB |
-| カード絵 | `images/cards/card_blood_price.png` | 血の代償：毎ターン自分に3ダメージ。 この戦闘中、ダメージが攻撃力と 同じだけ増加する。 | 346KB |
-| カード絵 | `images/cards/card_tit_for_tat.png` | しっぺ返し：この戦闘中、敵は攻撃した後 その攻撃力と同じダメージを受ける。 | 367KB |
-| カード絵 | `images/cards/card_selection.png` | 選択：手札を1枚選ぶ。この戦闘中、 そのカードのコストを -1 する。廃棄。 | 334KB |
-| カード絵 | `images/cards/card_stone_throw.png` | 投石：{damage} のダメージ。 | 307KB |
-| カード絵 | `images/cards/card_fury.png` | 憤怒：このターンに使ったカードの枚数×5 （{damage}）のダメージ。 | 300KB |
-| カード絵 | `images/cards/card_issen.png` | 一閃：攻撃力×1（{damage}）のダメージ。 | 357KB |
-| カード絵 | `images/cards/card_bone_breaker.png` | 骨断ち：攻撃力×3（{damage}）のダメージ。 | 342KB |
-| カード絵 | `images/cards/card_triple_slash.png` | 三閃撃：攻撃力×1（{damage}）のダメージを {hits} 回。 | 354KB |
-| カード絵 | `images/cards/card_lethal_blow.png` | 致死の一撃：攻撃力×X（{damage}）のダメージ。 X＝残りの行動値（AP）。 | 342KB |
-| カード絵 | `images/cards/card_lion_dance.png` | 獅子乱舞：攻撃力×1（{damage}）のダメージを X 回。X＝残りの行動値（AP）。 | 337KB |
-| カード絵 | `images/cards/card_armor_break.png` | 鎧砕き：敵のシールドを 50% 下げる。 | 346KB |
-| カード絵 | `images/cards/card_black_flame.png` | 黒炎：魔力×1（{damage}）のダメージ。 | 350KB |
-| カード絵 | `images/cards/card_inferno.png` | 業火：魔力×3（{damage}）のダメージ。 | 347KB |
-| カード絵 | `images/cards/card_flame_vortex.png` | 炎渦：魔力×1（{damage}）のダメージを {hits} 回。 | 344KB |
-| カード絵 | `images/cards/card_underworld_flame.png` | 冥府の炎：魔力×X（{damage}）のダメージ。 X＝残りの行動値（AP）。 | 359KB |
-| カード絵 | `images/cards/card_ashes.png` | 灰燼：魔力×1（{damage}）のダメージを X 回。X＝残りの行動値（AP）。 | 326KB |
-| カード絵 | `images/cards/card_will_o_wisp.png` | 鬼火：敵のシールドを 50% 下げる。 | 344KB |
-| カード絵 | `images/cards/card_blood_flash.png` | 血閃：自分に {self} ダメージ。 攻撃力×2（{damage}）のダメージ。 | 341KB |
-| カード絵 | `images/cards/card_crimson_slash.png` | 鮮血斬：自分に {self} ダメージ。 攻撃力×5（{damage}）のダメージ。 | 359KB |
-| カード絵 | `images/cards/card_corpse_pile.png` | 死屍累々：この戦闘中に減った自分の HP と 同じだけ（{damage}）ダメージ。 | 349KB |
-| カード絵 | `images/cards/card_curse_flame.png` | 呪炎：魔力×1（{curse}）の呪いを付与する。 | 341KB |
-| カード絵 | `images/cards/card_death_curse.png` | 呪殺：魔力×X（{curse}）の呪いを付与する。 X＝残りの行動値（AP）。 | 345KB |
-| カード絵 | `images/cards/card_grudge.png` | 積年の恨み：現在のターン数と同じだけ （{curse}）呪いを付与する。 | 353KB |
-| UI | `images/ui/ui_card_frame_bronze.png` | カード枠（basic） | 190KB |
-| UI | `images/ui/ui_card_frame_silver.png` | カード枠（common） | 190KB |
-| UI | `images/ui/ui_card_frame_gold.png` | カード枠（rare） | 193KB |
-| UI | `images/ui/ui_card_frame_legendary.png` | カード枠（legendary） | 200KB |
-| UI | `images/ui/ui_card_back.png` | カード裏面 | 376KB |
+| カード絵 | `images/cards/card_block.png` | ブロック：防御力×1（{block}）のシールドを得る。 | 384KB |
+| カード絵 | `images/cards/card_iron_wall.png` | 鉄壁：防御力×3（{block}）のシールドを得る。 | 394KB |
+| カード絵 | `images/cards/card_steadfast.png` | 不屈の守勢：この戦闘中、毎ターン 防御力×1のシールドを得る。 | 388KB |
+| カード絵 | `images/cards/card_rally.png` | 奮起：次のターン、攻撃力が2倍になる。 | 382KB |
+| カード絵 | `images/cards/card_rest.png` | 休息：攻撃力×1（{heal}）HP を回復する。 | 382KB |
+| カード絵 | `images/cards/card_prayer.png` | 祈り：魔力×1（{heal}）HP を回復する。 | 385KB |
+| カード絵 | `images/cards/card_inspiration.png` | 思いつき：カードを1枚引く。 | 393KB |
+| カード絵 | `images/cards/card_blessing.png` | 加護：カードを2枚引く。 | 386KB |
+| カード絵 | `images/cards/card_dark_blessing.png` | 闇の加護：カードを3枚引く。 | 381KB |
+| カード絵 | `images/cards/card_retaliate.png` | 報復：このターン受けたダメージと 同じだけ（{damage}）ダメージ。 | 393KB |
+| カード絵 | `images/cards/card_pride.png` | 誇り：この戦闘中、行動値（AP）を1上昇させる。 廃棄。 | 385KB |
+| カード絵 | `images/cards/card_scheme.png` | 謀略：相手の行動を1回キャンセルする。 | 391KB |
+| カード絵 | `images/cards/card_trickery.png` | 小手先：この戦闘中、ダメージが +2 増加する。 | 393KB |
+| カード絵 | `images/cards/card_blood_price.png` | 血の代償：毎ターン自分に3ダメージ。 この戦闘中、ダメージが攻撃力と 同じだけ増加する。 | 385KB |
+| カード絵 | `images/cards/card_tit_for_tat.png` | しっぺ返し：この戦闘中、敵は攻撃した後 その攻撃力と同じダメージを受ける。 | 386KB |
+| カード絵 | `images/cards/card_selection.png` | 選択：手札を1枚選ぶ。この戦闘中、 そのカードのコストを -1 する。廃棄。 | 393KB |
+| カード絵 | `images/cards/card_stone_throw.png` | 投石：{damage} のダメージ。 | 389KB |
+| カード絵 | `images/cards/card_fury.png` | 憤怒：このターンに使ったカードの枚数×5 （{damage}）のダメージ。 | 374KB |
+| カード絵 | `images/cards/card_issen.png` | 一閃：攻撃力×1（{damage}）のダメージ。 | 384KB |
+| カード絵 | `images/cards/card_bone_breaker.png` | 骨断ち：攻撃力×3（{damage}）のダメージ。 | 380KB |
+| カード絵 | `images/cards/card_triple_slash.png` | 三閃撃：攻撃力×1（{damage}）のダメージを {hits} 回。 | 384KB |
+| カード絵 | `images/cards/card_lethal_blow.png` | 致死の一撃：攻撃力×X（{damage}）のダメージ。 X＝残りの行動値（AP）。 | 385KB |
+| カード絵 | `images/cards/card_lion_dance.png` | 獅子乱舞：攻撃力×1（{damage}）のダメージを X 回。X＝残りの行動値（AP）。 | 389KB |
+| カード絵 | `images/cards/card_armor_break.png` | 鎧砕き：敵のシールドを 50% 下げる。 | 369KB |
+| カード絵 | `images/cards/card_black_flame.png` | 黒炎：魔力×1（{damage}）のダメージ。 | 392KB |
+| カード絵 | `images/cards/card_inferno.png` | 業火：魔力×3（{damage}）のダメージ。 | 380KB |
+| カード絵 | `images/cards/card_flame_vortex.png` | 炎渦：魔力×1（{damage}）のダメージを {hits} 回。 | 393KB |
+| カード絵 | `images/cards/card_underworld_flame.png` | 冥府の炎：魔力×X（{damage}）のダメージ。 X＝残りの行動値（AP）。 | 382KB |
+| カード絵 | `images/cards/card_ashes.png` | 灰燼：魔力×1（{damage}）のダメージを X 回。X＝残りの行動値（AP）。 | 397KB |
+| カード絵 | `images/cards/card_will_o_wisp.png` | 鬼火：敵のシールドを 50% 下げる。 | 395KB |
+| カード絵 | `images/cards/card_blood_flash.png` | 血閃：自分に {self} ダメージ。 攻撃力×2（{damage}）のダメージ。 | 367KB |
+| カード絵 | `images/cards/card_crimson_slash.png` | 鮮血斬：自分に {self} ダメージ。 攻撃力×5（{damage}）のダメージ。 | 375KB |
+| カード絵 | `images/cards/card_corpse_pile.png` | 死屍累々：この戦闘中に減った自分の HP と 同じだけ（{damage}）ダメージ。 | 365KB |
+| カード絵 | `images/cards/card_curse_flame.png` | 呪炎：魔力×1（{curse}）の呪いを付与する。 | 371KB |
+| カード絵 | `images/cards/card_death_curse.png` | 呪殺：魔力×X（{curse}）の呪いを付与する。 X＝残りの行動値（AP）。 | 385KB |
+| カード絵 | `images/cards/card_grudge.png` | 積年の恨み：現在のターン数と同じだけ （{curse}）呪いを付与する。 | 380KB |
+| UI | `images/ui/ui_card_frame_bronze.png` | カード枠（basic）：黒鉄の枠＋羊皮紙。イラスト窓は透明 | 410KB |
+| UI | `images/ui/ui_card_frame_silver.png` | カード枠（common）：黒鉄の枠＋羊皮紙。イラスト窓は透明 | 368KB |
+| UI | `images/ui/ui_card_frame_gold.png` | カード枠（rare）：黒鉄の枠＋羊皮紙。イラスト窓は透明 | 394KB |
+| UI | `images/ui/ui_card_frame_legendary.png` | カード枠（legendary）：黒鉄の枠＋羊皮紙。イラスト窓は透明 | 476KB |
+| UI | `images/ui/ui_card_plate_bronze.png` | カード名の名札（basic） | 53KB |
+| UI | `images/ui/ui_card_plate_silver.png` | カード名の名札（common） | 53KB |
+| UI | `images/ui/ui_card_plate_gold.png` | カード名の名札（rare） | 52KB |
+| UI | `images/ui/ui_card_plate_legendary.png` | カード名の名札（legendary） | 54KB |
+| UI | `images/ui/ui_card_cost_gem.png` | カードのコスト（血色のガラス玉） | 26KB |
+| UI | `images/ui/ui_type_attack.png` | カードの種類の紋章（墨の印）：attack | 9KB |
+| UI | `images/ui/ui_type_defense.png` | カードの種類の紋章（墨の印）：defense | 9KB |
+| UI | `images/ui/ui_type_support.png` | カードの種類の紋章（墨の印）：support | 9KB |
+| UI | `images/ui/ui_type_buff.png` | カードの種類の紋章（墨の印）：buff | 7KB |
+| UI | `images/ui/ui_type_debuff.png` | カードの種類の紋章（墨の印）：debuff | 11KB |
+| UI | `images/ui/ui_type_special.png` | カードの種類の紋章（墨の印）：special | 9KB |
+| UI | `images/ui/ui_element_sword.png` | 攻撃の系統の紋章（墨の印）：sword | 8KB |
+| UI | `images/ui/ui_element_magic.png` | 攻撃の系統の紋章（墨の印）：magic | 10KB |
+| UI | `images/ui/ui_element_blood.png` | 攻撃の系統の紋章（墨の印）：blood | 9KB |
+| UI | `images/ui/ui_element_curse.png` | 攻撃の系統の紋章（墨の印）：curse | 9KB |
+| UI | `images/ui/ui_card_back.png` | カード裏面 | 425KB |
 | UI | `images/ui/ui_button.png` | ボタン枠（透過・全ボタン共通） | 18KB |
 | UI | `images/ui/ui_panel.png` | パネル枠 | 271KB |
 | UI | `images/ui/ui_logo.png` | タイトルロゴ | 190KB |

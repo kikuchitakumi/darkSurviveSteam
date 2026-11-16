@@ -16,12 +16,14 @@
 const env = import.meta.env;
 
 export const FIREBASE_CONFIG = {
-  apiKey: env.VITE_FIREBASE_API_KEY ?? '',
+  apiKey: env.VITE_FIREBASE_API_KEY ?? 'AIzaSyCjfrw113EXJoRe-ZTncixIYLHc-3N_VRo',
   authDomain: env.VITE_FIREBASE_AUTH_DOMAIN ?? 'darksurvive-75631.firebaseapp.com',
   projectId: env.VITE_FIREBASE_PROJECT_ID ?? 'darksurvive-75631',
   storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET ?? 'darksurvive-75631.firebasestorage.app',
-  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '',
-  appId: env.VITE_FIREBASE_APP_ID ?? '',
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? '880918672038',
+  appId: env.VITE_FIREBASE_APP_ID ?? '1:880918672038:web:28666092f2311245a2fa67',
+  // アクセス解析（Google Analytics）用。今は使っていない
+  measurementId: env.VITE_FIREBASE_MEASUREMENT_ID ?? 'G-YS6QZKDX3T',
 };
 
 /** apiKey と appId が入っていれば Firebase を使う。無ければ「ローカル保存モード」 */

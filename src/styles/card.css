@@ -1,16 +1,22 @@
 /* =============================================================
    card.css  【スタイル：カード】
    -------------------------------------------------------------
-   カード 1 枚 = 220 x 308px（枠の画像は 2倍解像度の 440 x 616）
-     .card            … 位置決め（手札では JS が transform で動かす）
-     .card-tilt       … 3D の傾き（--rx / --ry）
-     .card-art        … イラスト（枠のくり抜き窓の下に置く）
-     .card-frame      … レア度ごとの金属枠（画像）
-     .card-ribbon     … 名前のリボン（種類ごとの色）
-     .card-cost       … コストの宝石（画像＋数字）
-     .card-type-emblem… 種類のエンブレム（画像）
-     .card-glare      … マウス位置に合わせて動く光の反射
-     .card-foil       … レア／レジェンドのホログラム
+   カード 1 枚 = 220 x 308px（枠などの画像は 2倍解像度の 440 x 616）
+   見た目：黒鉄の枠＋尖頭アーチの窓＋古い羊皮紙。少しだけ立体（3D）。
+
+   ■ 層と奥行き（.card-tilt の中は transform-style: preserve-3d）
+     .card-edge      -3/-6/-9px  カードの厚み（縁だけの輪を重ねる）
+     .card-art          -10px    挿絵（枠の窓の奥。傾けると覗き込むようにずれる）
+     .card-foil         -9.5px   レア／レジェンドの光沢（挿絵の上）
+     .card-frame          0      枠＋羊皮紙（画像）
+     .card-watermark     +0.5px  紋章の透かし
+     .card-type/.card-desc +1px  種類・説明（墨の文字）
+     .card-plate        +12px    名札
+     .card-cost         +22px    コスト（血色のガラス玉）
+     .card-glare        +26px    光の反射（マウスの位置）
+   ※奥行きは個別プロパティの translate で付ける
+     （JS のアニメーションが transform を上書きしても奥行きが消えないように）
+   ※ filter は .card-tilt に掛けないこと（3D が平らになる）。暗くする時は .card に掛ける
    ============================================================= */
 .card {
   position: relative;
@@ -18,11 +24,17 @@
   height: 308px;
   --rx: 0deg;
   --ry: 0deg;
+  --px: 0;
+  --py: 0;
   --mx: 50%;
   --my: 30%;
+  /* 種類の色（名札の宝石） */
   --type-a: #c03a2e;
   --type-b: #4a0808;
   --type-light: #ffb8a8;
+  /* 墨の色 */
+  --ink: #22120a;
+  --ink-soft: #5a3a1e;
 }
 .card.type-attack { --type-a: #c8342a; --type-b: #4a0606; --type-light: #ffb0a0; }
 .card.type-defense { --type-a: #3a78d0; --type-b: #0a1c44; --type-light: #b8d6ff; }
@@ -30,163 +42,218 @@
 .card.type-debuff { --type-a: #8a4ad8; --type-b: #24083e; --type-light: #dcc0ff; }
 .card.type-special { --type-a: #2fa868; --type-b: #06301a; --type-light: #b0ffd0; }
 .card.type-support { --type-a: #c99626; --type-b: #3e2704; --type-light: #ffe2a0; }
-.card.element-sword { --type-a: #b8323a; --type-b: #3a060c; --type-light: #ffc0c0; }
-.card.element-magic { --type-a: #5a52e0; --type-b: #12083e; --type-light: #c8c0ff; }
-.card.element-blood { --type-a: #8e0a1a; --type-b: #2a0004; --type-light: #ff8a90; }
-.card.element-curse { --type-a: #3e8a52; --type-b: #0a1e0e; --type-light: #c0ffb0; }
-/* 「選択」でコストが下がったカード */
-.card.cost-down .card-cost span { color: #8dff9b; text-shadow: 0 0 3px #000, 0 2px 2px #000, 0 0 12px rgba(80, 255, 120, 0.95); }
+.card.element-sword { --type-a: #d0443a; --type-b: #3a060c; --type-light: #ffc0c0; }
+.card.element-magic { --type-a: #7a62f0; --type-b: #12083e; --type-light: #d8d0ff; }
+.card.element-blood { --type-a: #b0101e; --type-b: #2a0004; --type-light: #ff8a90; }
+.card.element-curse { --type-a: #4ea052; --type-b: #0a1e0e; --type-light: #c8ffb8; }
 
+/* ---------- 傾き・影 ---------- */
 .card-tilt {
   position: absolute;
   inset: 0;
-  border-radius: 14px;
+  border-radius: 12px;
+  transform-style: preserve-3d;
   transform: perspective(900px) rotateX(var(--rx)) rotateY(var(--ry));
-  transition: transform 0.3s ease-out, box-shadow 0.25s, filter 0.25s;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.85);
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.3, 1), box-shadow 0.25s;
+  /* 影は光（マウス）と反対側に落ちる */
+  box-shadow:
+    calc(var(--px) * -22px) calc(12px + var(--py) * -16px) 24px rgba(0, 0, 0, 0.85),
+    0 2px 4px rgba(0, 0, 0, 0.9);
 }
-.card.is-tilting .card-tilt { transition: transform 0.06s linear, box-shadow 0.25s, filter 0.25s; }
+.card.is-tilting .card-tilt { transition: transform 0.06s linear, box-shadow 0.25s; }
+.card-tilt > * { position: absolute; }
 
-.card-art { position: absolute; left: 15px; top: 15px; width: 190px; height: 178px; border-radius: 7px; overflow: hidden; background: #000; }
-.card-art img { width: 100%; height: 100%; object-fit: cover; transform: scale(1.05); transition: transform 0.5s ease-out; }
-.card:hover .card-art img { transform: scale(1.12); }
-.card-art-shade {
-  position: absolute;
-  left: 15px;
-  top: 15px;
-  width: 190px;
-  height: 178px;
-  border-radius: 7px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.75) 100%);
+/* カードの厚み：縁だけの輪を奥に3枚重ねる（中央は空いているので挿絵を隠さない） */
+.card-edge, .card-edge::before, .card-edge::after {
+  border-radius: 12px;
+  border: 6px solid #2a1f14;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
 }
-.card-frame { position: absolute; inset: 0; background-size: 100% 100%; pointer-events: none; }
+.card-edge { inset: 0; translate: 0 0 -3px; transform-style: preserve-3d; border-color: #3a2a1a; }
+.card-edge::before, .card-edge::after { content: ''; position: absolute; inset: -6px; }
+.card-edge::before { translate: 0 0 -3px; border-color: #2a1f14; }
+.card-edge::after { translate: 0 0 -6px; border-color: #1a130c; }
 
-/* 名前のリボン（外側＝金、内側＝種類の色） */
-.card-ribbon {
+/* ---------- 挿絵（窓の奥） ---------- */
+.card-art { left: 10px; top: 10px; width: 200px; height: 182px; overflow: hidden; background: #0a0705; translate: 0 0 -10px; border-radius: 6px; }
+.card-art img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.04); transition: transform 0.6s ease-out; }
+.card:hover .card-art img { transform: scale(1.09); }
+/* ろうそくの灯りの揺らぎ */
+.card-art-light {
   position: absolute;
-  left: 4px;
-  right: 4px;
-  top: 172px;
-  height: 36px;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 45%, rgba(255, 190, 120, 0.16), rgba(0, 0, 0, 0) 60%);
+  mix-blend-mode: screen;
+  animation: candle 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes candle {
+  0%, 100% { opacity: 0.55; }
+  18% { opacity: 0.9; }
+  33% { opacity: 0.6; }
+  52% { opacity: 1; }
+  70% { opacity: 0.7; }
+}
+
+/* ---------- 枠・羊皮紙 ---------- */
+.card-frame { inset: 0; background-size: 100% 100%; pointer-events: none; }
+.card-watermark {
+  left: 70px;
+  top: 212px;
+  width: 80px;
+  height: 80px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.1;
+  translate: 0 0 0.5px;
+}
+
+/* 種類（小さな墨の印＋文字） */
+.card-type {
+  left: 0;
+  right: 0;
+  top: 206px;
   display: flex;
   align-items: center;
   justify-content: center;
-  clip-path: polygon(0 50%, 14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%);
-  background: linear-gradient(180deg, #fff3c0 0%, #c8962e 30%, #6a4510 60%, #e8b84e 100%);
-  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.9));
+  gap: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--ink-soft);
+  translate: 0 0 1px;
 }
-.card-ribbon::before {
-  content: '';
-  position: absolute;
-  inset: 3px 4px;
-  clip-path: polygon(0 50%, 12px 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 12px 100%);
-  background: linear-gradient(180deg, var(--type-a) 0%, var(--type-b) 100%);
+.card-type img { width: 15px; height: 15px; opacity: 0.85; }
+
+/* 説明（羊皮紙に墨で書いた文字） */
+.card-desc {
+  left: 22px;
+  right: 22px;
+  top: 220px;
+  bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 13.5px;
+  font-weight: 700;
+  line-height: 1.42;
+  color: var(--ink);
+  text-shadow: 0 1px 0 rgba(255, 244, 220, 0.4);
+  translate: 0 0 1px;
 }
-.card-ribbon::after {
-  content: '';
-  position: absolute;
-  inset: 3px 4px 50%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
-  clip-path: polygon(0 100%, 12px 0, calc(100% - 12px) 0, 100% 100%);
+/* 行の長さをそろえて、最後の1〜2文字だけが次の行に落ちるのを防ぐ */
+/* 日本語は文節の切れ目で改行する（「シ／ールド」のような分かれ方を防ぐ） */
+.card-desc-inner { display: block; text-wrap: balance; word-break: auto-phrase; }
+.card-desc.long { font-size: 12px; line-height: 1.32; top: 208px; }
+/* 説明が長いカードは「種類」の小見出しを省く（名札の宝石と透かしで種類は分かる） */
+.card-tilt:has(.card-desc.long) .card-type { display: none; }
+.card-desc .num { font-family: var(--font-title); font-weight: 900; font-size: 17px; margin: 0 2px; color: #7a0c0c; text-shadow: 0 1px 0 rgba(255, 240, 210, 0.5); }
+.card-desc .num-up { color: #1d6a26; }
+.card-desc .num-down { color: #a04000; }
+
+/* ---------- 名札 ---------- */
+.card-plate {
+  left: 0;
+  top: 166px;
+  width: 220px;
+  height: 38px;
+  background-size: 100% 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  translate: 0 0 12px;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.7));
 }
 .card-name {
-  position: relative;
-  z-index: 1;
-  max-width: 180px;
-  font-size: 19px;
+  max-width: 158px;
+  font-size: 17px;
   font-weight: 800;
-  letter-spacing: 0.06em;
-  color: #fff6e0;
+  letter-spacing: 0.08em;
+  color: #f3e4c4;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-shadow: 0 1px 0 #000, 0 0 6px rgba(0, 0, 0, 0.9), 0 2px 3px #000;
+  /* 金属に彫り込んだような文字 */
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.95), 0 1px 0 rgba(255, 220, 160, 0.25), 0 0 10px rgba(0, 0, 0, 0.9);
 }
-.card-type {
+.plate-gem {
   position: absolute;
-  left: 0;
-  right: 0;
-  top: 215px;
-  text-align: center;
-  font-size: 12px;
-  letter-spacing: 0.25em;
-  color: var(--type-light);
-  text-shadow: 0 1px 2px #000;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
+  transform: rotate(45deg);
+  background: radial-gradient(circle at 30% 30%, #fff 0%, var(--type-light) 18%, var(--type-a) 50%, var(--type-b) 100%);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  box-shadow: 0 0 8px var(--type-a), inset 0 0 2px rgba(255, 255, 255, 0.6);
 }
-.card-desc {
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  top: 230px;
-  bottom: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  font-size: 15px;
-  line-height: 1.45;
-  text-shadow: 0 1px 3px #000;
-}
-.card-desc-inner { display: block; }
-.card-desc.long { font-size: 13px; line-height: 1.3; top: 218px; }
-/* 説明が長いカードは「種類」の小見出しを省く（リボンの色とエンブレムで種類は分かる） */
-.card-tilt:has(.card-desc.long) .card-type { display: none; }
-.card-desc .num { font-family: var(--font-title); font-weight: 900; font-size: 20px; margin: 0 2px; color: #fff; }
-.card-desc .num-up { color: #8dff9b; text-shadow: 0 0 6px rgba(80, 255, 120, 0.5); }
-.card-desc .num-down { color: #ff8b8b; }
+.plate-gem.l { left: 15px; }
+.plate-gem.r { right: 15px; }
 
+/* ---------- コスト ---------- */
 .card-cost {
-  position: absolute;
-  left: -14px;
-  top: -14px;
-  width: 68px;
-  height: 68px;
+  left: -10px;
+  top: -10px;
+  width: 56px;
+  height: 56px;
   background-size: contain;
   background-repeat: no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.8));
+  translate: 0 0 22px;
+  filter: drop-shadow(0 8px 6px rgba(0, 0, 0, 0.75));
 }
 .card-cost span {
   font-family: var(--font-title);
   font-weight: 900;
-  font-size: 30px;
-  color: #fff;
-  margin-top: -2px;
-  text-shadow: 0 0 3px #000, 0 2px 2px #000, 0 0 10px rgba(255, 120, 40, 0.9);
+  font-size: 25px;
+  color: #fff4e2;
+  margin-top: -1px;
+  text-shadow: 0 0 2px #000, 0 2px 2px #000, 0 0 10px rgba(255, 90, 40, 0.95);
 }
-.card-type-emblem { position: absolute; right: 8px; top: 8px; width: 40px; height: 40px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8)); }
-.card-type-emblem img { width: 100%; height: 100%; }
+/* 「選択」でコストが下がったカード */
+.card.cost-down .card-cost span { color: #8dff9b; text-shadow: 0 0 3px #000, 0 2px 2px #000, 0 0 12px rgba(80, 255, 120, 0.95); }
 
+/* ---------- 光 ---------- */
 /* 光の反射（マウスの位置に付いてくる） */
 .card-glare {
-  position: absolute;
   inset: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   pointer-events: none;
-  background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 250, 235, 0.45), rgba(255, 255, 255, 0) 45%);
-  mix-blend-mode: overlay;
+  background: radial-gradient(circle at var(--mx) var(--my), rgba(255, 244, 220, 0.42), rgba(255, 240, 220, 0.08) 30%, rgba(255, 255, 255, 0) 55%);
+  mix-blend-mode: soft-light;
   opacity: 0;
   transition: opacity 0.3s;
+  translate: 0 0 26px;
 }
 .card:hover .card-glare, .card.is-tilting .card-glare { opacity: 1; }
 
-/* ホログラム（レア＝イラスト部分、レジェンド＝全体） */
-.card-foil { display: none; position: absolute; pointer-events: none; mix-blend-mode: color-dodge; }
-.card.rarity-rare .card-foil, .card.rarity-legendary .card-foil {
-  display: block;
-  background: linear-gradient(115deg, transparent 18%, rgba(255, 60, 160, 0.35) 30%, rgba(60, 220, 255, 0.35) 42%, rgba(255, 240, 80, 0.35) 54%, rgba(80, 255, 140, 0.3) 66%, transparent 80%);
-  background-size: 300% 300%;
+/* レア＝挿絵に金の光沢、レジェンド＝虹色の光沢が流れ、赤い気配をまとう */
+.card-foil { display: none; left: 14px; top: 14px; width: 192px; height: 172px; border-radius: 6px; pointer-events: none; mix-blend-mode: color-dodge; translate: 0 0 -9.5px; }
+.card.rarity-rare .card-foil, .card.rarity-legendary .card-foil { display: block; }
+.card.rarity-rare .card-foil {
+  background: linear-gradient(115deg, transparent 25%, rgba(255, 210, 120, 0.4) 45%, rgba(255, 240, 200, 0.5) 50%, rgba(255, 190, 90, 0.35) 55%, transparent 75%);
+  background-size: 250% 250%;
   background-position: var(--mx) var(--my);
-  opacity: 0.2;
+  opacity: 0.25;
   transition: opacity 0.3s;
 }
-.card.rarity-rare .card-foil { left: 15px; top: 15px; width: 190px; height: 178px; border-radius: 7px; }
-.card.rarity-legendary .card-foil { inset: 0; border-radius: 14px; opacity: 0.35; animation: foilShift 6s linear infinite; }
+.card.rarity-legendary .card-foil {
+  background: linear-gradient(115deg, transparent 15%, rgba(255, 60, 90, 0.4) 30%, rgba(255, 200, 80, 0.4) 42%, rgba(120, 220, 255, 0.35) 54%, rgba(190, 90, 255, 0.35) 66%, transparent 82%);
+  background-size: 300% 300%;
+  opacity: 0.35;
+  animation: foilShift 7s linear infinite;
+}
 .card:hover .card-foil { opacity: 0.7; }
 @keyframes foilShift { 0% { background-position: 0% 0%; } 50% { background-position: 100% 100%; } 100% { background-position: 0% 0%; } }
-.card.rarity-legendary .card-tilt { box-shadow: 0 12px 26px rgba(0, 0, 0, 0.85), 0 0 22px rgba(255, 210, 120, 0.45); }
+.card.rarity-legendary .card-tilt { animation: legendAura 3.6s ease-in-out infinite; }
+@keyframes legendAura {
+  0%, 100% { box-shadow: calc(var(--px) * -22px) calc(12px + var(--py) * -16px) 24px rgba(0, 0, 0, 0.85), 0 0 14px rgba(200, 20, 30, 0.45); }
+  50% { box-shadow: calc(var(--px) * -22px) calc(12px + var(--py) * -16px) 24px rgba(0, 0, 0, 0.85), 0 0 30px rgba(230, 40, 40, 0.75); }
+}
 
 /* ---------- 手札でのカード ---------- */
 .hand { position: absolute; inset: 0; pointer-events: none; }
@@ -204,12 +271,12 @@
   animation: playableGlow 2.2s ease-in-out infinite;
 }
 @keyframes playableGlow { 50% { box-shadow: 0 0 0 2px rgba(255, 220, 150, 1), 0 0 34px rgba(255, 150, 60, 0.95), 0 12px 26px rgba(0, 0, 0, 0.85); } }
-.card.in-hand.unplayable .card-tilt { filter: brightness(0.65) saturate(0.6); }
-.card.in-hand.unplayable .card-cost span { color: #ff8070; }
+.card.in-hand.unplayable { filter: brightness(0.62) saturate(0.6); }
+.card.in-hand.unplayable .card-cost span { color: #ffb0a0; }
 .card.in-hand.dragging { transition: none; cursor: grabbing; }
 .card.in-hand.will-play .card-tilt { box-shadow: 0 0 0 3px var(--c-gold-bright), 0 0 50px rgba(255, 200, 80, 0.95); }
-.card.played { pointer-events: none; transition: none; }
-.card.played .card-tilt { box-shadow: 0 0 0 3px #fff3c0, 0 0 60px rgba(255, 200, 120, 0.95); filter: brightness(1.2); }
+.card.played { pointer-events: none; transition: none; filter: brightness(1.2); }
+.card.played .card-tilt { box-shadow: 0 0 0 3px #fff3c0, 0 0 60px rgba(255, 200, 120, 0.95); }
 .card.shake-no { animation: shakeNo 0.35s; }
 @keyframes shakeNo { 25% { margin-left: -10px; } 75% { margin-left: 10px; } }
 .is-choosing .card.in-hand .card-tilt { box-shadow: 0 0 0 2px rgba(200, 160, 255, 0.95), 0 0 26px rgba(160, 100, 255, 0.7); }

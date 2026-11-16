@@ -39,16 +39,23 @@ export const IMAGES = {
   /** パネル枠（9スライス：角110pxは伸びない）。モーダル・メッセージ窓・報酬画面などで共通 */
   panel: 'images/ui/ui_panel.png',
   cardBack: 'images/ui/ui_card_back.png',
-  /** カード枠（レア度ごと）。イラスト窓は透明、説明欄は半透明 */
+  /** カード枠（レア度ごと）。イラスト窓（尖頭アーチ）は透明、説明欄の羊皮紙まで含む */
   cardFrame: {
     basic: 'images/ui/ui_card_frame_bronze.png',
     common: 'images/ui/ui_card_frame_silver.png',
     rare: 'images/ui/ui_card_frame_gold.png',
     legendary: 'images/ui/ui_card_frame_legendary.png',
   },
-  /** カードのコストの宝石（数字は上に CSS で表示） */
+  /** カード名の名札（レア度ごと。両端の宝石は CSS で種類の色に塗る） */
+  cardPlate: {
+    basic: 'images/ui/ui_card_plate_bronze.png',
+    common: 'images/ui/ui_card_plate_silver.png',
+    rare: 'images/ui/ui_card_plate_gold.png',
+    legendary: 'images/ui/ui_card_plate_legendary.png',
+  },
+  /** カードのコスト（血色のガラス玉。数字は上に CSS で表示） */
   cardCostGem: 'images/ui/ui_card_cost_gem.png',
-  /** カードの種類のエンブレム（右上） */
+  /** カードの種類の紋章（羊皮紙に押した墨の印。説明欄の見出しと透かしに使う） */
   cardType: {
     attack: 'images/ui/ui_type_attack.png',
     defense: 'images/ui/ui_type_defense.png',
@@ -57,7 +64,7 @@ export const IMAGES = {
     debuff: 'images/ui/ui_type_debuff.png',
     special: 'images/ui/ui_type_special.png',
   },
-  /** 攻撃の系統のエンブレム（剣・魔力・血・呪） */
+  /** 攻撃の系統の紋章（剣・魔力・血・呪） */
   cardElement: {
     sword: 'images/ui/ui_element_sword.png',
     magic: 'images/ui/ui_element_magic.png',

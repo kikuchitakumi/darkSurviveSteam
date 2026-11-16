@@ -173,9 +173,9 @@ ENEMIES.forEach((e) => {
 });
 
 // ---- カード ----
-md += section('カードのイラスト（PNG 960x900）', 'カード枠のイラスト窓（縦横ほぼ同じ比率）に表示されます。中央に主題を大きく。');
+md += section('カードのイラスト（PNG 960x900）', 'カード枠の尖頭アーチ（ゴシック窓）の奥に表示されます。上の角は窓に隠れるので、主題は中央〜やや下に大きく。ろうそくの灯りのような暖色の光と、銅版画のような細かい陰影が枠の質感（黒鉄と古い羊皮紙）に合います。');
 CARDS.forEach((c) => {
-  md += row(c.image, '960x900 PNG', `${c.name}：${c.description.replace(/\n/g, ' ')}`, `${STYLE}, card art, ${CARD_HINT[c.id] ?? c.name}, dynamic composition, centered subject`);
+  md += row(c.image, '960x900 PNG', `${c.name}：${c.description.replace(/\n/g, ' ')}`, `${STYLE}, card art, ${CARD_HINT[c.id] ?? c.name}, dynamic composition, centered subject, candlelit chiaroscuro, subtle engraved etching texture`);
 });
 
 // ---- 人物・オブジェクト ----
@@ -201,7 +201,7 @@ md += `
 ## UI部品について
 カード枠・ボタン・パネル・宝石・メダリオンなどの **UI部品** は、プログラムで高品質に生成しています
 （\`tools/placeholder-draw.js\`）。AIで作り直す場合は、**透過PNG・同じサイズ・同じ透明部分の位置** を守ってください。
-特にカード枠は「イラスト窓が透明」「説明欄が半透明」である必要があります。サイズと用途は \`docs/ASSETS.md\` を参照。
+特にカード枠は「イラスト窓（尖頭アーチ）が透明」で、説明欄の羊皮紙まで含んだ1枚の画像です。カード関係の描画は \`tools/card-draw.js\`。サイズと用途は \`docs/ASSETS.md\` を参照。
 `;
 
 writeFileSync(join(ROOT, 'docs', 'ART_PROMPTS.md'), md);

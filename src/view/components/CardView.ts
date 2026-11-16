@@ -3,17 +3,26 @@
 // -------------------------------------------------------------
 // カードの DOM を組み立てる。手札・報酬・ショップ・デッキ一覧で共通。
 //
-//   ┌──────────────┐ ← 枠（レア度ごとの金属枠の画像）
-//   │◆1      [⚔]  │ ← コストの宝石 / 種類のエンブレム
-//   │   [イラスト]   │
-//   │ ═斬りつけ═   │ ← 名前のリボン（種類ごとの色）
-//   │ 攻撃            │
-//   │ 敵に4ダメージ   │ ← 説明（数値はステータス込みで計算）
+//   ┌─────/\─────┐ ← 黒鉄の枠（レア度ごとに縁取りの金属が変わる）
+//   ●1   /    \    │ ← コスト（血色のガラス玉）
+//   │   │ 挿絵 │   │ ← 尖頭アーチの窓。挿絵は窓の「奥」にある
+//   │ ◆═ 一 閃 ═◆ │ ← 名札（両端の宝石は種類の色）
+//   │ ┌──────────┐ │
+//   │ │印 攻撃・剣│ │ ← 羊皮紙の説明欄（墨の文字・紋章の透かし）
+//   │ │ 4のダメージ│ │    数値はステータス込みで計算
+//   │ └──────────┘ │
 //   └──────◆──────┘ ← レア度の宝石
 //
-// マウスを乗せると、カードが3Dに傾き、光の反射が動く。
-// レア・レジェンドはホログラムの虹色の光沢が乗る。
-// 枠・宝石・エンブレムの画像は data/images.ts で管理。
+// ■ 3D の仕組み（transform-style: preserve-3d）
+//   部品を奥行きの違う層に置き、マウスに合わせてカード全体を傾ける。
+//     奥  -14px : カードの厚み（側面）
+//         -10px : 挿絵（窓の奥なので、傾けると窓から覗き込むようにずれる）
+//          0px : 枠・羊皮紙
+//         +1px : 文字・紋章
+//        +12px : 名札
+//        +22px : コスト
+//   手前 +26px : 光の反射
+// 枠・名札・コスト・紋章の画像は data/images.ts で管理。
 // =============================================================
 import { IMAGES } from '@/data/images';
 import { t } from '@/i18n';
@@ -28,7 +37,9 @@ import { cardDesc, cardName } from '../text';
 export function renderDescription(def: CardDef, numbers?: Record<string, number>): HTMLElement {
   const base = baseNumbers(def);
   const nums = numbers ?? base;
-  const text = cardDesc(def);
+  let text = cardDesc(def);
+  // 実際の数値が無い時（図鑑・プレビューなど）は、ステータス倍率の値（0）を出さずに括弧ごと省く
+  if (!numbers) text = text.replace(/[（(]\{(\w+)\}[）)]/g, (m, k) => (base[k] ? m : ''));
   // 1行あたり約13文字として行数を見積もり、3行以上なら小さめの文字にする
   const lines = text.replace(/\{\w+\}/g, '00').split('\n').reduce((n, seg) => n + Math.max(1, Math.ceil(seg.length / 13)), 0);
   const outer = h(`div.card-desc${lines >= 3 ? '.long' : ''}`);
@@ -59,6 +70,8 @@ function baseNumbers(def: CardDef): Record<string, number> {
     if (e.kind === 'damage' && out.damage === undefined) { out.damage = e.amount; out.hits = typeof e.hits === 'number' ? e.hits : 1; }
     if (e.kind === 'block' && out.block === undefined) out.block = e.amount;
     if (e.kind === 'heal' && out.heal === undefined) out.heal = e.amount;
+    if (e.kind === 'selfDamage' && out.self === undefined) out.self = e.amount;
+    if (e.kind === 'status' && e.status === 'curse' && out.curse === undefined) out.curse = e.amount;
   }
   return out;
 }
@@ -72,16 +85,18 @@ export function cardTypeLabel(def: CardDef): string {
 /** カード要素を作る */
 export function createCardEl(def: CardDef, opts: { numbers?: Record<string, number>; uid?: string; small?: boolean; tilt?: boolean } = {}): HTMLElement {
   const typeLabel = cardTypeLabel(def);
+  const sigil = def.element ? IMAGES.cardElement[def.element] : IMAGES.cardType[def.type];
+  const bg = (path: string) => ({ backgroundImage: `url("${asset(path)}")` });
   const tiltEl = h('div.card-tilt', {}, [
-    h('div.card-art', {}, img(def.image)),
-    h('div.card-art-shade'),
-    h('div.card-frame', { style: { backgroundImage: `url("${asset(IMAGES.cardFrame[def.rarity])}")` } }),
-    h('div.card-ribbon', {}, h('div.card-name', {}, cardName(def))),
-    h('div.card-type', {}, typeLabel),
-    renderDescription(def, opts.numbers),
-    h('div.card-type-emblem', {}, img(def.element ? IMAGES.cardElement[def.element] : IMAGES.cardType[def.type])),
-    h('div.card-cost', { style: { backgroundImage: `url("${asset(IMAGES.cardCostGem)}")` } }, h('span', {}, String(def.cost))),
+    h('div.card-edge'),
+    h('div.card-art', {}, [img(def.image), h('div.card-art-light')]),
     h('div.card-foil'),
+    h('div.card-frame', { style: bg(IMAGES.cardFrame[def.rarity]) }),
+    h('div.card-watermark', { style: bg(sigil) }),
+    h('div.card-type', {}, [img(sigil), h('span', {}, typeLabel)]),
+    renderDescription(def, opts.numbers),
+    h('div.card-plate', { style: bg(IMAGES.cardPlate[def.rarity]) }, [h('i.plate-gem.l'), h('div.card-name', {}, cardName(def)), h('i.plate-gem.r')]),
+    h('div.card-cost', { style: bg(IMAGES.cardCostGem) }, h('span', {}, String(def.cost))),
     h('div.card-glare'),
   ]);
   const el = h(`div.card.type-${def.type}.rarity-${def.rarity}${def.element ? '.element-' + def.element : ''}${def.cost === 'X' ? '.cost-x' : ''}${opts.small ? '.card-small' : ''}`, { dataset: { cardId: def.id, uid: opts.uid ?? '' } }, [tiltEl]);
@@ -90,23 +105,28 @@ export function createCardEl(def: CardDef, opts: { numbers?: Record<string, numb
 }
 
 /**
- * マウスの位置に合わせてカードを3Dに傾け、光の反射を動かす。
- * CSS 変数 --rx / --ry（傾き）と --mx / --my（光の位置）を更新するだけなので軽い。
+ * マウスの位置に合わせてカードを3Dに傾け、光の反射と影を動かす。
+ * CSS 変数を更新するだけなので軽い。
+ *   --rx / --ry … 傾き（deg）
+ *   --px / --py … マウスの位置（-0.5〜0.5。影の向きに使う）
+ *   --mx / --my … 光の位置（%）
  */
 export function enableTilt(el: HTMLElement): void {
   el.addEventListener('pointermove', (e) => {
     const r = el.getBoundingClientRect();
-    const x = (e.clientX - r.left) / r.width;
-    const y = (e.clientY - r.top) / r.height;
-    el.style.setProperty('--rx', `${(0.5 - y) * 16}deg`);
-    el.style.setProperty('--ry', `${(x - 0.5) * 18}deg`);
+    const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    const y = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+    el.style.setProperty('--rx', `${(0.5 - y) * 18}deg`);
+    el.style.setProperty('--ry', `${(x - 0.5) * 20}deg`);
+    el.style.setProperty('--px', (x - 0.5).toFixed(3));
+    el.style.setProperty('--py', (y - 0.5).toFixed(3));
     el.style.setProperty('--mx', `${x * 100}%`);
     el.style.setProperty('--my', `${y * 100}%`);
     el.classList.add('is-tilting');
   });
   el.addEventListener('pointerleave', () => {
-    el.style.setProperty('--rx', '0deg');
-    el.style.setProperty('--ry', '0deg');
+    for (const k of ['--rx', '--ry']) el.style.setProperty(k, '0deg');
+    for (const k of ['--px', '--py']) el.style.setProperty(k, '0');
     el.classList.remove('is-tilting');
   });
 }
