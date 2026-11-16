@@ -15,6 +15,7 @@ import * as THREE from 'three';
 import { settings } from '@/core/Settings';
 import { ui } from '../ui';
 import { loadImage } from './cardAssets';
+import { FrameBudget } from './frameBudget';
 
 const W = 1920;
 const H = 1080;
@@ -241,6 +242,20 @@ interface Candle {
   seed: number;
 }
 
+// -------------------------------------------------------------
+// 戦闘ごとに作り直さず、使い回すもの
+// -------------------------------------------------------------
+// WebGL の環境（レンダラー）を戦闘のたびに作り直すと、シェーダー（GPU 用の小さなプログラム）の
+// 準備に毎回 1 秒近くかかり、その間画面が止まる。レンダラーと質感の画像は1つを使い回す。
+let shared: { renderer: THREE.WebGLRenderer; canvas: HTMLCanvasElement; aa: boolean } | null = null;
+/** いま shared のキャンバスを使っている戦闘背景 */
+let active: BattleWorld | null = null;
+const texCache = new Map<string, unknown>();
+function cached<T>(key: string, make: () => T): T {
+  if (!texCache.has(key)) texCache.set(key, make());
+  return texCache.get(key) as T;
+}
+
 export interface BattleWorldOptions {
   /** 遠景に使う背景画像（ゾーンの戦闘背景） */
   backdrop: string;
@@ -262,6 +277,9 @@ export class BattleWorld {
   private raf = 0;
   /** 前回描いた時刻（背景なので 30fps に間引く） */
   private lastDraw = 0;
+  /** 重い時に解像度を下げる倍率（1 → 0.8 → 0.64 …） */
+  private dynScale = 1;
+  private budget = new FrameBudget();
   private disposed = false;
   private pointer = { x: 0, y: 0 };
   // カメラ：敵の足元（床の z=-250）が画面の y≈640、テーブルの奥の縁が y≈800 に来る位置
@@ -274,6 +292,20 @@ export class BattleWorld {
   };
   private onResize = () => this.renderer.setPixelRatio(this.pixelRatio());
 
+  /**
+   * 下準備：タイトル画面などの暇な時間に、見えないところで一度描いてシェーダーを作っておく。
+   * （最初の戦闘に入った時に画面が止まらないようにする）
+   */
+  static prewarm(): void {
+    if (shared && shared.aa === (settings.current.quality === 'high')) return;
+    try {
+      const w = new BattleWorld(document.createElement('div'), null, { backdrop: '' }, true);
+      w.dispose();
+    } catch (e) {
+      console.warn('3D の背景の下準備に失敗しました', e);
+    }
+  }
+
   static attach(parent: HTMLElement, before: Node | null, opts: BattleWorldOptions): BattleWorld | null {
     try {
       return new BattleWorld(parent, before, opts);
@@ -283,12 +315,21 @@ export class BattleWorld {
     }
   }
 
-  private constructor(parent: HTMLElement, before: Node | null, private opts: BattleWorldOptions) {
-    this.canvas = document.createElement('canvas');
-    this.canvas.className = 'battle-world-canvas';
+  private constructor(parent: HTMLElement, before: Node | null, private opts: BattleWorldOptions, warmOnly = false) {
     const q = settings.current.quality;
     // 背景は多少ぼけても目立たないので、アンチエイリアスは「高」画質の時だけ
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: q === 'high', powerPreference: 'high-performance' });
+    const aa = q === 'high';
+    active?.dispose();
+    if (!shared || shared.aa !== aa) {
+      shared?.renderer.dispose();
+      shared?.renderer.forceContextLoss();
+      const canvas = document.createElement('canvas');
+      canvas.className = 'battle-world-canvas';
+      shared = { renderer: new THREE.WebGLRenderer({ canvas, antialias: aa, powerPreference: 'high-performance' }), canvas, aa };
+    }
+    active = this;
+    this.canvas = shared.canvas;
+    this.renderer = shared.renderer;
     this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(W, H, false);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -300,17 +341,30 @@ export class BattleWorld {
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.shadowMap.needsUpdate = true;
     this.build();
+    if (warmOnly) {
+      // 影も含めて全部のシェーダーを作るため、実際に1回描く（画面には出ない）
+      this.renderer.shadowMap.needsUpdate = true;
+      this.renderer.render(this.scene, this.camera);
+      return;
+    }
+    // シェーダーの準備が終わるまでは透明にしておき（下の通常の背景が見える）、画面を止めずに裏で準備する
+    this.canvas.style.transition = 'opacity 0.4s ease';
+    this.canvas.style.opacity = '0';
     parent.insertBefore(this.canvas, before);
     window.addEventListener('pointermove', this.onMove);
     window.addEventListener('resize', this.onResize);
-    this.loop();
+    this.renderer.compileAsync(this.scene, this.camera).catch(() => {}).then(() => {
+      if (this.disposed) return;
+      this.canvas.style.opacity = '1';
+      this.loop();
+    });
   }
 
   /** 描画解像度の倍率。背景なので画面の解像度より上げない（高画質でも 1 まで） */
   private pixelRatio(): number {
     const q = settings.current.quality;
     const cap = q === 'high' ? 1 : q === 'medium' ? 0.85 : 0.7;
-    return Math.min(cap, Math.max(0.6, window.devicePixelRatio * ui.stage.scale));
+    return Math.min(cap, Math.max(0.6, window.devicePixelRatio * ui.stage.scale)) * this.dynScale;
   }
 
   private track<T extends { dispose(): void }>(o: T): T {
@@ -326,7 +380,8 @@ export class BattleWorld {
     s.fog = new THREE.FogExp2(0x0a0605, 0.00042);
 
     // ---- 遠景：ゾーンの背景画像 ----
-    const backMat = this.track(new THREE.MeshBasicMaterial({ color: 0x8a7a70, fog: false }));
+    // 画像が読み込まれるまでは仮の1色の画像を貼っておく（後から画像を付けるとシェーダーの作り直しになるため）
+    const backMat = this.track(new THREE.MeshBasicMaterial({ color: 0x8a7a70, fog: false, map: cached('blank', () => { const t = new THREE.DataTexture(new Uint8Array([20, 14, 12, 255]), 1, 1); t.colorSpace = THREE.SRGBColorSpace; t.needsUpdate = true; return t; }) }));
     const back = new THREE.Mesh(this.track(new THREE.PlaneGeometry(4200, 2360)), backMat);
     back.position.set(0, 700, -1900);
     s.add(back);
@@ -340,9 +395,8 @@ export class BattleWorld {
     }).catch(() => {});
 
     // ---- 床（石畳） ----
-    const stone = stoneTexture(r);
-    this.track(stone.map);
-    this.track(stone.bump);
+    // 質感の画像は作るのに時間がかかるので、最初の戦闘で作ったものを使い回す（dispose しない）
+    const stone = cached('stone', () => stoneTexture(rng(11)));
     const floorMat = this.track(new THREE.MeshStandardMaterial({ map: stone.map, bumpMap: stone.bump, bumpScale: 3, roughness: 0.82, metalness: 0.05, color: 0x9a8a80 }));
     const floor = new THREE.Mesh(this.track(new THREE.PlaneGeometry(5000, 3400)), floorMat);
     floor.rotation.x = -Math.PI / 2;
@@ -351,7 +405,7 @@ export class BattleWorld {
     s.add(floor);
 
     // ---- 魔法陣（敵の足元） ----
-    const runeTex = this.track(runeTexture());
+    const runeTex = cached('rune', runeTexture);
     this.rune = new THREE.Mesh(this.track(new THREE.PlaneGeometry(1300, 1300)), this.track(new THREE.MeshBasicMaterial({ map: runeTex, color: accent.clone().multiplyScalar(0.9), transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false })));
     this.rune.rotation.x = -Math.PI / 2;
     this.rune.position.set(0, 1.5, -250);
@@ -389,11 +443,11 @@ export class BattleWorld {
     }
 
     // ---- 手前のテーブル（黒檀＋金の縁） ----
-    const wood = this.track(woodTexture(r));
+    const wood = cached('wood', () => woodTexture(rng(12)));
     const tableMat = this.track(new THREE.MeshStandardMaterial({ map: wood, roughness: 0.68, metalness: 0, color: 0x8a6650 }));
     const goldMat = this.track(new THREE.MeshStandardMaterial({ color: 0xd8a84a, metalness: 1, roughness: 0.3 }));
     // ビロード：sheen（毛足の艶）で、光の角度によって縁が明るく光る
-    const clothMat = this.track(new THREE.MeshPhysicalMaterial({ map: this.track(clothTexture(r)), color: 0x6a4242, roughness: 0.9, sheen: 1, sheenColor: new THREE.Color(0xd04040), sheenRoughness: 0.35 }));
+    const clothMat = this.track(new THREE.MeshPhysicalMaterial({ map: cached('cloth', () => clothTexture(rng(13))), color: 0x6a4242, roughness: 0.9, sheen: 1, sheenColor: new THREE.Color(0xd04040), sheenRoughness: 0.35 }));
     const table = new THREE.Group();
     const top = new THREE.Mesh(this.track(new THREE.BoxGeometry(2600, 40, 600)), tableMat);
     top.receiveShadow = true;
@@ -413,7 +467,7 @@ export class BattleWorld {
     s.add(table);
 
     // ---- 燭台（テーブルの両端と、奥の左右） ----
-    const dot = this.track(softDot());
+    const dot = cached('dot', softDot);
     const waxMat = this.track(new THREE.MeshStandardMaterial({ color: 0xe8dcc0, roughness: 0.6, emissive: 0x402010, emissiveIntensity: 0.4 }));
     const holderMat = goldMat;
     const addCandle = (x: number, y: number, z: number, h: number, scale = 1, light = true, power = 1) => {
@@ -462,7 +516,7 @@ export class BattleWorld {
     spot.castShadow = true;
     spot.shadow.mapSize.set(1024, 1024);
     s.add(spot, spot.target);
-    const beamTex = this.track(beamTexture());
+    const beamTex = cached('beam', beamTexture);
     for (let i = 0; i < 5; i++) {
       const beam = new THREE.Mesh(this.track(new THREE.PlaneGeometry(260 + r() * 260, 2400)), this.track(new THREE.MeshBasicMaterial({ map: beamTex, color: this.opts.boss ? 0xff7050 : 0xffd0a0, transparent: true, opacity: 0.08 + r() * 0.06, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })));
       beam.position.set((r() - 0.5) * 700, 1150, -350 + (r() - 0.5) * 300);
@@ -498,6 +552,11 @@ export class BattleWorld {
     }
     this.raf = requestAnimationFrame(this.loop);
     const now = performance.now();
+    // 重い状態が続いたら解像度を一段下げる（下限は元の半分）
+    if (this.budget.tick(now) && this.dynScale > 0.5) {
+      this.dynScale *= 0.8;
+      this.renderer.setPixelRatio(this.pixelRatio());
+    }
     // 背景はゆっくりした動きしかないので 30fps で十分（GPU の負担を半分にする）
     if (now - this.lastDraw < 30) return;
     this.lastDraw = now;
@@ -538,9 +597,13 @@ export class BattleWorld {
     cancelAnimationFrame(this.raf);
     window.removeEventListener('pointermove', this.onMove);
     window.removeEventListener('resize', this.onResize);
-    this.disposables.forEach((d) => d.dispose());
-    this.renderer.dispose();
-    this.renderer.forceContextLoss();
-    this.canvas.remove();
+    // マテリアルは dispose しない（dispose するとシェーダーも捨てられ、次の戦闘で作り直しになる）
+    this.disposables.forEach((d) => { if (!(d instanceof THREE.Material)) d.dispose(); });
+    // レンダラーとキャンバスは次の戦闘で使い回す（シェーダーを作り直さないため）
+    if (active === this) {
+      active = null;
+      this.canvas.remove();
+      this.renderer.renderLists.dispose();
+    }
   }
 }

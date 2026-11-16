@@ -19,10 +19,12 @@
 //   ・マウスの位置に点光源があり、カードの上の反射がマウスに付いてくる
 // =============================================================
 import * as THREE from 'three';
-import { getCard, hasCard } from '@/data/cards';
+import { CARDS, getCard, hasCard } from '@/data/cards';
 import type { CardDef } from '@/model/types';
 import { settings } from '@/core/Settings';
 import { ui } from '../ui';
+import { createCardEl } from '../components/CardView';
+import { FrameBudget } from './frameBudget';
 import {
   BODY_D, CARD_H, CARD_W, FRONT_Z, TYPE_COLOR, artTexture, blobTexture, boxWall, buildEnvMap, frameMapsFor, gemMat, geometries, invisible,
   ironMetal, orbGlass, readDescTokens, renderCostNumber, renderFace, renderPlate, trimMetal,
@@ -296,16 +298,27 @@ class Card3D {
   }
 
   dispose(): void {
-    this.mats.forEach((m) => m.dispose());
-    (this.shadow.material as THREE.Material).dispose();
-    (this.glow.material as THREE.Material).dispose();
+    // マテリアルは dispose しない。dispose すると three.js がシェーダーも捨ててしまい、
+    // 次に同じ種類のカードを出した時に作り直しで画面が止まるため（マテリアル自体は GC で消える）
     this.motes.geometry.dispose();
   }
 }
 
+/**
+ * 使い終わったレンダラーの置き場。
+ * 画面を開くたびに WebGL の環境を作り直すと、シェーダーの準備で毎回画面が止まるため、
+ * 閉じた画面のレンダラーをここに戻して次の画面で使い回す。
+ */
+const pool: { renderer: THREE.WebGLRenderer; canvas: HTMLCanvasElement; env: THREE.Texture }[] = [];
+const POOL_MAX = 3;
+
 export class CardLayer {
   readonly canvas: HTMLCanvasElement;
   private renderer: THREE.WebGLRenderer;
+  private gl: (typeof pool)[number];
+  /** 重い時に解像度を下げる倍率 */
+  private dynScale = 1;
+  private budget = new FrameBudget();
   private scene = new THREE.Scene();
   private camera = new THREE.PerspectiveCamera(FOV, STAGE_W / STAGE_H, 50, CAM_Z * 3);
   private mouseLight = new THREE.PointLight(0xffd6a0, 2.4, 0, 0);
@@ -321,6 +334,30 @@ export class CardLayer {
   };
   private onResize = () => this.renderer.setPixelRatio(this.pixelRatio());
 
+  /**
+   * 下準備：タイトル画面などの暇な時間に、見えないカードを何枚か描いてシェーダーを作っておく。
+   * （作ったレンダラーは置き場に戻るので、最初の戦闘でカードを出した時に画面が止まらない）
+   */
+  static prewarm(): void {
+    if (pool.length) return;
+    const rarities = ['basic', 'common', 'rare', 'legendary'];
+    const defs = rarities.map((r) => CARDS.find((c) => c.rarity === r)).filter((c): c is CardDef => !!c);
+    const host = document.createElement('div');
+    host.style.cssText = 'position:absolute;left:0;top:0;width:1920px;height:1080px;visibility:hidden;pointer-events:none;';
+    defs.forEach((d, i) => {
+      const el = createCardEl(d);
+      el.style.cssText += `position:absolute;left:${200 + i * 300}px;top:400px;`;
+      host.append(el);
+    });
+    ui.stage.el.append(host);
+    const layer = CardLayer.attach({ host, parent: host });
+    // 文字の画像ができてから数フレーム描かせて、片付ける
+    window.setTimeout(() => {
+      layer?.dispose();
+      host.remove();
+    }, 2500);
+  }
+
   /** 作れなかった（WebGL が使えない）場合は null */
   static attach(opts: CardLayerOptions): CardLayer | null {
     try {
@@ -332,16 +369,25 @@ export class CardLayer {
   }
 
   private constructor(private opts: CardLayerOptions) {
-    this.canvas = document.createElement('canvas');
-    this.canvas.className = 'card-gl-canvas';
-    this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, alpha: true, antialias: true, premultipliedAlpha: true });
+    let gl = pool.pop();
+    if (!gl) {
+      const canvas = document.createElement('canvas');
+      canvas.className = 'card-gl-canvas';
+      const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, premultipliedAlpha: true });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.setClearColor(0x000000, 0);
+      gl = { renderer, canvas, env: buildEnvMap(renderer) };
+    }
+    this.gl = gl;
+    this.canvas = gl.canvas;
+    this.renderer = gl.renderer;
     this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(STAGE_W, STAGE_H, false);
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.15;
-    this.renderer.setClearColor(0x000000, 0);
-    this.scene.environment = buildEnvMap(this.renderer);
+    this.renderer.setScissorTest(false);
+    this.renderer.clear();
+    this.scene.environment = gl.env;
     this.camera.position.set(0, 0, CAM_Z);
     // 光：暖色の主光（左上）、奥からの縁の光、マウスの点光源
     this.scene.add(new THREE.AmbientLight(0xffeedd, 0.25));
@@ -364,7 +410,7 @@ export class CardLayer {
   private pixelRatio(): number {
     const q = settings.current.quality;
     const cap = q === 'high' ? 1.5 : q === 'medium' ? 1.25 : 1;
-    return Math.min(cap, Math.max(1, window.devicePixelRatio * ui.stage.scale));
+    return Math.min(cap, Math.max(1, window.devicePixelRatio * ui.stage.scale)) * this.dynScale;
   }
 
   private loop = (): void => {
@@ -375,6 +421,11 @@ export class CardLayer {
     }
     this.raf = requestAnimationFrame(this.loop);
     const now = performance.now();
+    // 重い状態が続いたら解像度を一段下げる（下限は 0.75 倍）
+    if (this.budget.tick(now) && this.dynScale > 0.75) {
+      this.dynScale = Math.max(0.75, this.dynScale * 0.85);
+      this.renderer.setPixelRatio(this.pixelRatio());
+    }
     const dt = Math.min(0.05, (now - this.last) / 1000);
     this.last = now;
     this.sync(now / 1000, dt);
@@ -499,9 +550,15 @@ export class CardLayer {
     this.cards.forEach((c) => c.dispose());
     this.cards.clear();
     this.opts.host.classList.remove('gl-cards');
-    this.renderer.dispose();
-    this.renderer.forceContextLoss();
     this.canvas.remove();
+    // レンダラーは次の画面で使い回す（シェーダーを作り直さないため）
+    this.renderer.renderLists.dispose();
+    if (pool.length < POOL_MAX) pool.push(this.gl);
+    else {
+      this.gl.env.dispose();
+      this.renderer.dispose();
+      this.renderer.forceContextLoss();
+    }
   }
 }
 

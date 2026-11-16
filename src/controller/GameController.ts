@@ -14,6 +14,8 @@
 //
 // 実際の処理は各 Controller（Battle/Reward/Shop/Event/Treasure）に任せる。
 // =============================================================
+import { BattleWorld } from '@/view/three/BattleWorld';
+import { CardLayer } from '@/view/three/CardLayer';
 import { Audio } from '@/core/AudioManager';
 import { Random } from '@/core/Random';
 import { Storage } from '@/core/Storage';
@@ -103,6 +105,11 @@ export class GameController {
       this.isDebugRun = false;
       ui.hud.bind(null);
       Audio.playBgm('bgm_title');
+      // タイトル画面にいる間に、戦闘で使う 3D 描画の下準備（シェーダー作り）を済ませておく
+      window.setTimeout(() => {
+        BattleWorld.prewarm();
+        CardLayer.prewarm();
+      }, 1500);
       const meta = Storage.loadMeta();
       const choice = await showTitle({ hasSave: Storage.hasSave(), bestFloor: meta.bestFloor });
       if (choice.action === 'start') {
